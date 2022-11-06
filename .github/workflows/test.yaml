@@ -67,7 +67,7 @@ jobs:
       - name: Install Dependencies
         run: |
           go version
-          go install github.com/kevinburke/go-bindata/go-bindata@v3.23.0
+          go install github.com/kevinburke/go-bindata/go-bindata@v3.24.0
 
       - name: Code Generation
         run: go generate ./...
@@ -111,7 +111,7 @@ jobs:
       - name: Install Dependencies
         run: |
           go version
-          go install github.com/kevinburke/go-bindata/go-bindata@v3.23.0
+          go install github.com/kevinburke/go-bindata/go-bindata@v3.24.0
 
       - name: Code Generation
         run: go generate ./...
@@ -129,7 +129,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v2
         with:
-          node-version: 16.8.0
+          node-version: 18.7.0
           cache: "yarn"
           cache-dependency-path: ./web/yarn.lock
 

@@ -45,7 +45,7 @@ services:
   postgres:
     image: postgres:15
     volumes:
-      - "../pkg/server/db/migrations/999999_schema_version.up.sql:/docker-entrypoint-initdb.d/999999_schema_version.up.sql"
+      - "./postgres/999999_schema_version.up.sql:/docker-entrypoint-initdb.d/999999_schema_version.up.sql"
     init: true
     restart: always
     ports:
