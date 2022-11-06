@@ -1,0 +1,233 @@
+package server
+
+import (
+	"context"
+	"net"
+	"net/http"
+	"os"
+	"os/signal"
+	"sync"
+	"time"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+
+	"github.com/bbengfort/epistolary/pkg"
+	"github.com/bbengfort/epistolary/pkg/api/v1"
+	"github.com/bbengfort/epistolary/pkg/server/config"
+	"github.com/bbengfort/epistolary/pkg/server/db"
+	"github.com/bbengfort/epistolary/pkg/server/db/schema"
+	"github.com/bbengfort/epistolary/pkg/utils/logger"
+)
+
+func init() {
+	// Initialize zerolog with GCP logging requirements
+	zerolog.TimeFieldFormat = time.RFC3339
+	zerolog.TimestampFieldName = logger.GCPFieldKeyTime
+	zerolog.MessageFieldName = logger.GCPFieldKeyMsg
+
+	// Add the severity hook for GCP logging
+	var gcpHook logger.SeverityHook
+	log.Logger = zerolog.New(os.Stdout).Hook(gcpHook).With().Timestamp().Logger()
+}
+
+type Server struct {
+	sync.RWMutex
+	conf    config.Config
+	srv     *http.Server
+	router  *gin.Engine
+	started time.Time
+	healthy bool
+	url     string
+	echan   chan error
+}
+
+// New creates a new Epistolary server from the specified configuration.
+func New(conf config.Config) (s *Server, err error) {
+	// Load the default configuration from the environment if config is empty
+	if conf.IsZero() {
+		if conf, err = config.New(); err != nil {
+			return nil, err
+		}
+	}
+
+	// Set the global level
+	zerolog.SetGlobalLevel(conf.GetLogLevel())
+
+	// Set human readable logging if specified
+	if conf.ConsoleLog {
+		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	}
+
+	// Create the server and prepare to serve
+	s = &Server{
+		conf:  conf,
+		echan: make(chan error, 1),
+	}
+
+	// Connect to the TestNet and MainNet directory services and database if we're not
+	// in maintenance or testing mode (in testing mode, the connection will be manual).
+	if !s.conf.Maintenance && s.conf.Mode != gin.TestMode {
+		log.Debug().Msg("setting up production mode")
+	}
+
+	// Create the router
+	gin.SetMode(conf.Mode)
+	s.router = gin.New()
+	if err = s.setupRoutes(); err != nil {
+		return nil, err
+	}
+
+	// Create the http server
+	s.srv = &http.Server{
+		Addr:         s.conf.BindAddr,
+		Handler:      s.router,
+		ErrorLog:     nil,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 15 * time.Second,
+		IdleTimeout:  30 * time.Second,
+	}
+	return s, nil
+}
+
+// Serve API requests on the specified address.
+func (s *Server) Serve() (err error) {
+	// Catch OS signals for graceful shutdowns
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt)
+	go func() {
+		<-quit
+		s.echan <- s.Shutdown()
+	}()
+
+	if s.conf.Maintenance {
+		log.Warn().Msg("starting server in maintenance mode")
+	} else {
+		// Wait for the database to be at the correct schema
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+		err = schema.Wait(ctx, s.conf.Database.URL)
+		cancel()
+		if err != nil {
+			return err
+		}
+
+		// Connect to the database
+		if err = db.Connect(s.conf.Database); err != nil {
+			return err
+		}
+	}
+
+	// Set the health of the service to true unless we're in maintenance mode.
+	// The server should still start so that it can return unavailable to requests.
+	s.SetHealth(!s.conf.Maintenance)
+
+	// Create a socket to listen on so that we can infer the final URL (e.g. if the
+	// BindAddr is 127.0.0.1:0 for testing, a random port will be assigned, manually
+	// creating the listener will allow us to determine which port).
+	var sock net.Listener
+	if sock, err = net.Listen("tcp", s.conf.BindAddr); err != nil {
+		s.echan <- err
+	}
+
+	// Set the URL from the listener
+	s.SetURL("http://" + sock.Addr().String())
+	s.started = time.Now()
+
+	// Listen for HTTP requests on the specified address and port
+	go func() {
+		if err = s.srv.Serve(sock); err != nil && err != http.ErrServerClosed {
+			s.echan <- err
+		}
+	}()
+
+	log.Info().
+		Str("listen", s.url).
+		Str("version", pkg.Version()).
+		Msg("epistolary server started")
+
+	// Listen for any errors that might have occurred and wait for all go routines to stop
+	if err = <-s.echan; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *Server) Shutdown() (err error) {
+	log.Info().Msg("gracefully shutting down")
+
+	s.SetHealth(false)
+	s.srv.SetKeepAlivesEnabled(false)
+
+	// Require shutdown in 30 seconds without blocking
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	if err = s.srv.Shutdown(ctx); err != nil {
+		return err
+	}
+
+	// TODO: Shut down maintenance mode systems
+
+	log.Debug().Msg("successfully shutdown server")
+	return nil
+}
+
+func (s *Server) SetHealth(health bool) {
+	s.Lock()
+	s.healthy = health
+	s.Unlock()
+	log.Debug().Bool("healthy", health).Msg("server health set")
+}
+
+func (s *Server) SetURL(url string) {
+	s.Lock()
+	s.url = url
+	s.Unlock()
+	log.Debug().Str("url", url).Msg("server url set")
+}
+
+func (s *Server) setupRoutes() (err error) {
+	// Application Middleware
+	// NOTE: ordering is very important to how middleware is handled.
+	middlewares := []gin.HandlerFunc{
+		// Logging should be outside so we can record the complete latency of requests.
+		// NOTE: logging panics will not recover.
+		logger.GinLogger("epistolary"),
+
+		// Panic recovery middleware; note: gin middleware needs to be added before sentry
+		gin.Recovery(),
+
+		// CORS configuration allows the front-end to make cross-origin requests.
+		cors.New(cors.Config{
+			AllowOrigins:     s.conf.AllowOrigins,
+			AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"},
+			AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization", "X-CSRF-TOKEN", "sentry-trace"},
+			AllowCredentials: true,
+			MaxAge:           12 * time.Hour,
+		}),
+
+		// Maintenance mode handling - does not require authentication.
+		s.Available(),
+	}
+
+	// Add the middleware to the router
+	for _, middleware := range middlewares {
+		if middleware != nil {
+			s.router.Use(middleware)
+		}
+	}
+
+	// Add the v1 API routes
+	v1 := s.router.Group("/v1")
+	{
+		// Heartbeat route (no authentication required)
+		v1.GET("/status", s.Status)
+	}
+
+	// NotFound and NotAllowed routes
+	s.router.NoRoute(api.NotFound)
+	s.router.NoMethod(api.NotAllowed)
+	return nil
+}

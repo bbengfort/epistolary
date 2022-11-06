@@ -1,0 +1,56 @@
+version: "3"
+services:
+  api:
+    build:
+      context: ../
+      dockerfile: ./containers/api/Dockerfile
+      args:
+        GIT_REVISION: ${GIT_REVISION}
+    image: bbengfort/epistolary-api
+    init: true
+    depends_on:
+      - postgres
+    ports:
+      - 8000:8000
+      - 8001:8001
+    environment:
+      - EPISTOLARY_MAINTENANCE=false
+      - EPISTOLARY_BIND_ADDR=:8000
+      - EPISTOLARY_MODE=debug
+      - EPISTOLARY_LOG_LEVEL=info
+      - EPISTOLARY_CONSOLE_LOG=true
+      - EPISTOLARY_ALLOW_ORIGINS=http://localhost:3000
+      - EPISTOLARY_DATABASE_URL=postgres://postgres:postgres@postgres:5432/epistolary?sslmode=disable
+      - EPISTOLARY_DATABASE_READ_ONLY=false
+
+  web:
+    build:
+      context: ../
+      dockerfile: ./containers/web/Dockerfile
+      args:
+        REACT_APP_API_BASE_URL: http://localhost:8000/
+        REACT_APP_ANALYTICS_ID: ${REACT_APP_ANALYTICS_ID}
+        REACT_APP_VERSION_NUMBER: v0.1.0-dev
+        REACT_APP_GIT_REVISION: ${GIT_REVISION}
+        REACT_APP_SENTRY_DSN: ${REACT_APP_SENTRY_DSN}
+        REACT_APP_SENTRY_ENVIRONMENT: development
+        REACT_APP_USE_DASH_LOCALE: "true"
+    image: bbengfort/epistolary-web
+    init: true
+    depends_on:
+      - api
+    ports:
+      - 3000:80
+
+  postgres:
+    image: postgres:15
+    volumes:
+      - "../pkg/server/db/migrations/999999_schema_version.up.sql:/docker-entrypoint-initdb.d/999999_schema_version.up.sql"
+    init: true
+    restart: always
+    ports:
+      - 50432:5432
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=epistolary

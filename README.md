@@ -1,2 +1,3 @@
-# epistolary
-Collect reading material for easier referencing and search later.
+# Epistolary
+
+**Collect reading material for easier referencing and search later.**
