@@ -101,9 +101,9 @@ func (suite *epistolaryTestSuite) TearDownSuite() {
 func (suite *epistolaryTestSuite) ResetDatabase() (err error) {
 	// Truncate all database tables except roles, permissions, and role_permissions
 	stmts := []string{
+		"TRUNCATE reading",
 		"TRUNCATE users",
-		"TRUNCATE user_roles",
-		"DELETE FROM api_key_permissions",
+		"TRUNCATE epistles",
 	}
 
 	var tx *sql.Tx

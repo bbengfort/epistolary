@@ -4,6 +4,17 @@
 BEGIN;
 
 /*
+ * Enumerations and custom data types.
+ */
+
+CREATE TYPE reading_status AS ENUM (
+    'queued',
+    'started',
+    'finished',
+    'archived'
+);
+
+/*
  * Table definitions including PRIMARY KEY and UNIQUE indices
  */
 
@@ -18,10 +29,14 @@ CREATE TABLE IF NOT EXISTS epistles (
     modified    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Maps the epistles to the user that created them
-CREATE TABLE IF NOT EXISTS epistles_user (
+-- Maps the epistles to the user that created them and information about reading
+CREATE TABLE IF NOT EXISTS reading (
     epistle_id    INTEGER,
     user_id       INTEGER,
+    status        reading_status DEFAULT 'queued',
+    started       TIMESTAMPTZ,
+    finished      TIMESTAMPTZ,
+    archived      TIMESTAMPTZ,
     created       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     modified      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     PRIMARY KEY (epistle_id, user_id)
@@ -70,11 +85,11 @@ CREATE TABLE IF NOT EXISTS role_permissions (
  * Foreign Key Relationships
  */
 
-ALTER TABLE epistles_user ADD CONSTRAINT fk_epistles_user_epistle
+ALTER TABLE reading ADD CONSTRAINT fk_reading_epistle
     FOREIGN KEY (epistle_id) REFERENCES epistles (id)
     ON DELETE CASCADE;
 
-ALTER TABLE epistles_user ADD CONSTRAINT fk_epistles_user_user
+ALTER TABLE reading ADD CONSTRAINT fk_reading_user
     FOREIGN KEY (user_id) REFERENCES users (id)
     ON DELETE CASCADE;
 
@@ -121,8 +136,8 @@ FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_modified_timestamp();
 
 -- Epistles User modified timestamp
-CREATE TRIGGER set_epistles_user_modified
-BEFORE UPDATE ON epistles_user
+CREATE TRIGGER set_reading_modified
+BEFORE UPDATE ON reading
 FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_modified_timestamp();
 
