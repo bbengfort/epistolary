@@ -1,0 +1,24 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA256
+
+Contact: mailto:server@bengfort.com
+Expires: 2026-04-07T12:00:00.000Z
+Encryption: https://keys.openpgp.org/vks/v1/by-fingerprint/78A2DCBFA18B6D649A889AE76737E124F0D6AB12
+Preferred-Languages: en
+Canonical: https://epistolary.app/.well-known/security.txt
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEeKLcv6GLbWSaiJrnZzfhJPDWqxIFAmNoLBUACgkQZzfhJPDW
+qxIZdxAAukxFtD1JNofcyk9QGaCWWeZmZEmv+h6rSQ6Y+TRCVLl5HeUZG0LlE84g
+/YCTlkfqQ96HYUZHyVt1DDwOmaIHVZfT+foGd8Ng0d//uhhzAuPGK2lQ+wfCNTBf
+yvjbm0S8+YO9oPPAJlELN8ARZ6+aS5fUE9ywZ5QUb67V+LPCgvNjiHxVyJWN7lQA
+67Hr2ACqUt2Hivqso9J9QvNsnwGO/KPTkcLzWonFYSKfGtTxwuLmfqxqFMpmwx9I
+CJG5PBgV5nMEOEypWEwoDIjzHce1hOcEbABpTPeXZKQat18Na1w0oxhBS6DJErBa
+j/zqydoYNMlb3tiYtYOvh45ESAYPguk6NTPVaCyGPBaNEv86ldJb1IVZc4vv1L/u
+nPtYRWSt+kdkkYKMsNWl6TnHRvwffts0xdHLueDyFMRG2ceCGS3Z3Gj4qgqH+NLR
+s6It45C2LoQxwaoJ1Y3jhuJt1K3OuAfh8zalAxEm8p1PeBvSVNPK5zpg3SpWaD0a
+Q2ClR/8kA/iBhCOGsupSijirrpohyu0GpLFLB6klNH5bBnZxEVoAaV8gmOayUmUY
+8DELToe3IbFSRzyt0sdlt5V5w8PuNjhMrNuFUffcxg3EcIoED08FiPXB+GPpPJJL
+1/17Remr0t6NwiycKf67BY9/a4fTuG7xE4wV7BdgeX5zZ9m/fxw=
+=ZhqB
+-----END PGP SIGNATURE-----

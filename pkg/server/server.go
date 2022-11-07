@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"net"
 	"net/http"
 	"os"
@@ -9,8 +10,10 @@ import (
 	"sync"
 	"time"
 
+	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/hashicorp/go-multierror"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
@@ -19,7 +22,9 @@ import (
 	"github.com/bbengfort/epistolary/pkg/server/config"
 	"github.com/bbengfort/epistolary/pkg/server/db"
 	"github.com/bbengfort/epistolary/pkg/server/db/schema"
+	"github.com/bbengfort/epistolary/pkg/server/tokens"
 	"github.com/bbengfort/epistolary/pkg/utils/logger"
+	"github.com/bbengfort/epistolary/pkg/utils/sentry"
 )
 
 func init() {
@@ -38,10 +43,11 @@ type Server struct {
 	conf    config.Config
 	srv     *http.Server
 	router  *gin.Engine
+	tokens  *tokens.TokenManager
 	started time.Time
 	healthy bool
 	url     string
-	echan   chan error
+	errc    chan error
 }
 
 // New creates a new Epistolary server from the specified configuration.
@@ -63,14 +69,21 @@ func New(conf config.Config) (s *Server, err error) {
 
 	// Create the server and prepare to serve
 	s = &Server{
-		conf:  conf,
-		echan: make(chan error, 1),
+		conf: conf,
+		errc: make(chan error, 1),
 	}
 
 	// Connect to the TestNet and MainNet directory services and database if we're not
 	// in maintenance or testing mode (in testing mode, the connection will be manual).
-	if !s.conf.Maintenance && s.conf.Mode != gin.TestMode {
+	if !s.conf.Maintenance {
 		log.Debug().Msg("setting up production mode")
+		if len(s.conf.Token.Keys) == 0 {
+			return nil, errors.New("invalid configuration: no token keys specified")
+		}
+
+		if s.tokens, err = tokens.New(s.conf.Token); err != nil {
+			return nil, err
+		}
 	}
 
 	// Create the router
@@ -99,24 +112,28 @@ func (s *Server) Serve() (err error) {
 	signal.Notify(quit, os.Interrupt)
 	go func() {
 		<-quit
-		s.echan <- s.Shutdown()
+		s.errc <- s.Shutdown()
 	}()
 
 	if s.conf.Maintenance {
 		log.Warn().Msg("starting server in maintenance mode")
 	} else {
 		// Wait for the database to be at the correct schema
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
-		err = schema.Wait(ctx, s.conf.Database.URL)
-		cancel()
-		if err != nil {
-			return err
+		// TODO: handle testing mode a bit more gracefully
+		if !s.conf.Database.Testing {
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+			err = schema.Wait(ctx, s.conf.Database.URL)
+			cancel()
+			if err != nil {
+				return err
+			}
 		}
 
 		// Connect to the database
 		if err = db.Connect(s.conf.Database); err != nil {
 			return err
 		}
+		log.Debug().Bool("read-only", s.conf.Database.ReadOnly).Str("dsn", s.conf.Database.URL).Msg("connected to database")
 	}
 
 	// Set the health of the service to true unless we're in maintenance mode.
@@ -128,7 +145,7 @@ func (s *Server) Serve() (err error) {
 	// creating the listener will allow us to determine which port).
 	var sock net.Listener
 	if sock, err = net.Listen("tcp", s.conf.BindAddr); err != nil {
-		s.echan <- err
+		s.errc <- err
 	}
 
 	// Set the URL from the listener
@@ -138,8 +155,12 @@ func (s *Server) Serve() (err error) {
 	// Listen for HTTP requests on the specified address and port
 	go func() {
 		if err = s.srv.Serve(sock); err != nil && err != http.ErrServerClosed {
-			s.echan <- err
+			s.errc <- err
 		}
+
+		// If there is no error, return nil so this function exits if Shutdown is
+		// called manually (e.g. not from an OS signal).
+		s.errc <- nil
 	}()
 
 	log.Info().
@@ -148,7 +169,7 @@ func (s *Server) Serve() (err error) {
 		Msg("epistolary server started")
 
 	// Listen for any errors that might have occurred and wait for all go routines to stop
-	if err = <-s.echan; err != nil {
+	if err = <-s.errc; err != nil {
 		return err
 	}
 	return nil
@@ -164,14 +185,20 @@ func (s *Server) Shutdown() (err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	if err = s.srv.Shutdown(ctx); err != nil {
-		return err
+	if serr := s.srv.Shutdown(ctx); serr != nil {
+		err = multierror.Append(err, serr)
 	}
 
-	// TODO: Shut down maintenance mode systems
+	if !s.conf.Maintenance {
+		if serr := db.Close(); serr != nil {
+			err = multierror.Append(err, serr)
+		}
+	}
 
-	log.Debug().Msg("successfully shutdown server")
-	return nil
+	if err == nil {
+		log.Debug().Msg("successfully shutdown server")
+	}
+	return err
 }
 
 func (s *Server) SetHealth(health bool) {
@@ -188,7 +215,26 @@ func (s *Server) SetURL(url string) {
 	log.Debug().Str("url", url).Msg("server url set")
 }
 
+func (s *Server) URL() string {
+	s.RLock()
+	defer s.RUnlock()
+	return s.url
+}
+
 func (s *Server) setupRoutes() (err error) {
+	// Instantiate Sentry Handlers
+	var tags gin.HandlerFunc
+	if s.conf.Sentry.UseSentry() {
+		tagmap := map[string]string{"service": "epistolary", "component": "api"}
+		tags = sentry.UseTags(tagmap)
+	}
+
+	var tracing gin.HandlerFunc
+	if s.conf.Sentry.UsePerformanceTracking() {
+		tagmap := map[string]string{"service": "epistolary", "component": "api"}
+		tracing = sentry.TrackPerformance(tagmap)
+	}
+
 	// Application Middleware
 	// NOTE: ordering is very important to how middleware is handled.
 	middlewares := []gin.HandlerFunc{
@@ -196,8 +242,19 @@ func (s *Server) setupRoutes() (err error) {
 		// NOTE: logging panics will not recover.
 		logger.GinLogger("epistolary"),
 
-		// Panic recovery middleware; note: gin middleware needs to be added before sentry
+		// Panic recovery middleware
+		// NOTE: gin middleware needs to be added before sentry
 		gin.Recovery(),
+		sentrygin.New(sentrygin.Options{
+			Repanic:         true,
+			WaitForDelivery: false,
+		}),
+
+		// Add searchable tags to sentry context
+		tags,
+
+		// Tracing helps us measure performance metrics with Sentry
+		tracing,
 
 		// CORS configuration allows the front-end to make cross-origin requests.
 		cors.New(cors.Config{
@@ -224,6 +281,14 @@ func (s *Server) setupRoutes() (err error) {
 	{
 		// Heartbeat route (no authentication required)
 		v1.GET("/status", s.Status)
+	}
+
+	// The "well known" routes expose client security information and credentials.
+	wk := s.router.Group("/.well-known")
+	{
+		wk.GET("/jwks.json", s.JWKS)
+		wk.GET("/security.txt", s.SecurityTxt)
+		wk.GET("/openid-configuration", s.OpenIDConfiguration)
 	}
 
 	// NotFound and NotAllowed routes

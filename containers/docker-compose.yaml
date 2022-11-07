@@ -22,6 +22,17 @@ services:
       - EPISTOLARY_ALLOW_ORIGINS=http://localhost:3000
       - EPISTOLARY_DATABASE_URL=postgres://postgres:postgres@postgres:5432/epistolary?sslmode=disable
       - EPISTOLARY_DATABASE_READ_ONLY=false
+      - EPISTOLARY_TOKEN_KEYS=01GE6191AQTGMCJ9BN0QC3CCVG:run/secrets/01GE6191AQTGMCJ9BN0QC3CCVG.pem,01GE62EXXR0X0561XD53RDFBQJ:run/secrets/01GE62EXXR0X0561XD53RDFBQJ.pem
+      - EPISTOLARY_TOKEN_AUDIENCE=http://localhost:3000
+      - EPISTOLARY_TOKEN_ISSUER=http://localhost:8000
+      - EPISTOLARY_SENTRY_DSN=${EPISTOLARY_SENTRY_DSN}
+      - EPISTOLARY_SENTRY_SERVER_NAME=docker
+      - EPISTOLARY_SENTRY_ENVIRONMENT=development
+      - EPISTOLARY_SENTRY_TRACK_PERFORMANCE=true
+      - EPISTOLARY_SENTRY_SAMPLE_RATE=0.95
+    secrets:
+      - 01GE6191AQTGMCJ9BN0QC3CCVG.pem
+      - 01GE62EXXR0X0561XD53RDFBQJ.pem
 
   web:
     build:
@@ -45,6 +56,9 @@ services:
   postgres:
     image: postgres:15
     volumes:
+      - pgdata:/var/lib/db
+      - "./pkg/server/db/migrations/000001_initial_schema.up.sql:/docker-entrypoint-initdb.d/000001_initial_schema.up.sql"
+      - "./pkg/server/db/migrations/000002_default_roles.up.sql:/docker-entrypoint-initdb.d/000002_default_roles.up.sql"
       - "./postgres/999999_schema_version.up.sql:/docker-entrypoint-initdb.d/999999_schema_version.up.sql"
     init: true
     restart: always
@@ -54,3 +68,12 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=epistolary
+
+volumes:
+  pgdata:
+
+secrets:
+  01GE62EXXR0X0561XD53RDFBQJ.pem:
+    file: ./api/fixtures/01GE62EXXR0X0561XD53RDFBQJ.pem
+  01GE6191AQTGMCJ9BN0QC3CCVG.pem:
+    file: ./api/fixtures/01GE6191AQTGMCJ9BN0QC3CCVG.pem

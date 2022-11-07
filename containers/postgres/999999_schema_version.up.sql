@@ -8,6 +8,6 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
     dirty BOOLEAN NOT NULL
 );
 
-INSERT INTO schema_migrations(version, dirty) VALUES (0, false);
+INSERT INTO schema_migrations(version, dirty) VALUES (2, false);
 
 COMMIT;
