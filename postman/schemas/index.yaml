@@ -1,0 +1,52 @@
+openapi: 3.0.0
+info:
+    version: 1.0.0
+    title: Epistolary API
+    description: An API for collecting reading material from the web for easy referencing and search.
+    contact:
+        name: Benjamin Bengfort
+        url: https://epistolary.app/contact
+        email: support@epistolary.app
+    license:
+        name: BSD 3-Clause "New" or "Revised" License
+        url: https://github.com/bbengfort/epistolary/blob/main/LICENSE
+
+servers:
+    - url: http://localhost:8000/v1
+    - url: https://api.epistolary.app/v1
+
+paths:
+    /status:
+        get:
+            description: A heartbeat endpoint for checking the status of the server
+            responses:
+                "200":
+                    description: Successful response
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                required:
+                                    - status
+                                properties:
+                                    status:
+                                        type: string
+                                    uptime:
+                                        type: string
+                                    version:
+                                        type: string
+                "503":
+                    description: Unavailable or maintenance mode response
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                required:
+                                    - status
+                                properties:
+                                    status:
+                                        type: string
+                                    uptime:
+                                        type: string
+                                    version:
+                                        type: string
