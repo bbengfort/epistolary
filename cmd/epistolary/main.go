@@ -12,6 +12,7 @@ import (
 	"github.com/bbengfort/epistolary/pkg/server"
 	"github.com/bbengfort/epistolary/pkg/server/config"
 	"github.com/bbengfort/epistolary/pkg/server/db/schema"
+	"github.com/bbengfort/epistolary/pkg/server/fetch"
 	"github.com/joho/godotenv"
 	"github.com/urfave/cli/v2"
 )
@@ -89,6 +90,12 @@ func main() {
 						Value:   "http://localhost:8000",
 					},
 				},
+			},
+			{
+				Name:     "fetch",
+				Usage:    "fetch a webpage to see how it is parsed",
+				Category: "debug",
+				Action:   fetchURL,
 			},
 		},
 	}
@@ -183,6 +190,34 @@ func status(c *cli.Context) (err error) {
 	}
 
 	if err = json.NewEncoder(os.Stdout).Encode(rep); err != nil {
+		return cli.Exit(err, 1)
+	}
+	return nil
+}
+
+//===========================================================================
+// Debug Actions
+//===========================================================================
+
+func fetchURL(c *cli.Context) (err error) {
+	if c.NArg() == 0 {
+		return cli.Exit("specify at least one URL to fetch", 1)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	docs := make([]*fetch.Document, 0, c.NArg())
+	for i := 0; i < c.NArg(); i++ {
+		var doc *fetch.Document
+		if doc, err = fetch.Fetch(ctx, c.Args().Get(i)); err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		docs = append(docs, doc)
+	}
+
+	if err = json.NewEncoder(os.Stdout).Encode(docs); err != nil {
 		return cli.Exit(err, 1)
 	}
 	return nil

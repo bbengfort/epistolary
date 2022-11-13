@@ -10,8 +10,8 @@ INSERT INTO roles (id, title, description) VALUES
 INSERT INTO permissions (id, title, description) VALUES
     (1, 'admin:cms', 'Can access the CMS site and manage the epistles database'),
     (2, 'epistles:read', 'Can view the epistles for the logged in user'),
-    (3, 'epistles:create', 'Can create new epistles for the logged in user'),
-    (4, 'epistles:delete', 'Can delete an epistle for th elogged in user')
+    (3, 'epistles:update', 'Can create or modify epistles for the logged in user'),
+    (4, 'epistles:delete', 'Can delete an epistle for the logged in user')
 ;
 
 INSERT INTO role_permissions (role_id, permission_id) VALUES

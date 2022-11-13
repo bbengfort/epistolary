@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/bbengfort/epistolary/pkg/api/v1"
 	"github.com/bbengfort/epistolary/pkg/server/passwd"
@@ -126,4 +127,71 @@ func (s *Server) Login(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, out)
+}
+
+const (
+	bearer        = "Bearer "
+	authorization = "Authorization"
+	UserClaims    = "user_claims"
+)
+
+func (s *Server) Authenticate(c *gin.Context) {
+	var (
+		err    error
+		ats    string
+		claims *tokens.Claims
+	)
+
+	// Parse and verify JWT token in authorization header.
+	if ats, err = GetAccessToken(c); err != nil {
+		c.Error(err)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, api.ErrorResponse("authentication required"))
+		return
+	}
+
+	if claims, err = s.tokens.Verify(ats); err != nil {
+		c.Error(err)
+		c.AbortWithStatusJSON(http.StatusUnauthorized, api.ErrorResponse("authentication required"))
+		return
+	}
+
+	// Add claims to context for use in downstream processing and continue
+	c.Set(UserClaims, claims)
+	c.Next()
+}
+
+func (s *Server) Authorize(permissions ...string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Get claims
+		value, exists := c.Get(UserClaims)
+		if !exists || value == nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, api.ErrorResponse("authorization required"))
+			return
+		}
+
+		claims, ok := value.(*tokens.Claims)
+		if !ok {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, api.ErrorResponse("authorization required"))
+			return
+		}
+
+		if !claims.HasAllPermissions(permissions...) {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, api.ErrorResponse("authorization required"))
+			return
+		}
+
+		c.Next()
+	}
+}
+
+func GetAccessToken(c *gin.Context) (tks string, err error) {
+	header := c.GetHeader(authorization)
+	if header != "" {
+		parts := strings.Split(header, bearer)
+		if len(parts) == 2 {
+			return strings.TrimSpace(parts[1]), nil
+		}
+		return "", errors.New("could not parse Bearer token from Authorization header")
+	}
+	return "", errors.New("no access token found in request")
 }

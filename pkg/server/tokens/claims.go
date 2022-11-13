@@ -11,3 +11,21 @@ type Claims struct {
 	Role        string   `json:"role,omitempty"`
 	Permissions []string `json:"permissions,omitempty"`
 }
+
+func (c Claims) HasPermission(required string) bool {
+	for _, permisison := range c.Permissions {
+		if permisison == required {
+			return true
+		}
+	}
+	return false
+}
+
+func (c Claims) HasAllPermissions(required ...string) bool {
+	for _, perm := range required {
+		if !c.HasPermission(perm) {
+			return false
+		}
+	}
+	return true
+}
