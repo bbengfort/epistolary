@@ -279,6 +279,12 @@ func (s *Server) setupRoutes() (err error) {
 	// Add the v1 API routes
 	v1 := s.router.Group("/v1")
 	{
+		// Registration route (no authentication required)
+		v1.POST("/register", s.Register)
+
+		// Login route (no authentication required)
+		v1.POST("/login", s.Login)
+
 		// Heartbeat route (no authentication required)
 		v1.GET("/status", s.Status)
 	}

@@ -47,6 +47,36 @@ var _ EpistolaryClient = &APIv1{}
 // Client Methods
 //===========================================================================
 
+func (s *APIv1) Register(ctx context.Context, in *RegisterRequest) (err error) {
+	//  Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodPost, "/v1/register", in, nil); err != nil {
+		return err
+	}
+
+	if _, err = s.Do(req, nil, true); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *APIv1) Login(ctx context.Context, in *LoginRequest) (out *LoginReply, err error) {
+	//  Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodPost, "/v1/login", in, nil); err != nil {
+		return nil, err
+	}
+
+	out = &LoginReply{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+
+	// TODO: save access and refresh token for follow up request handling
+	return out, nil
+}
+
 func (s *APIv1) Status(ctx context.Context) (out *StatusReply, err error) {
 	//  Make the HTTP request
 	var req *http.Request

@@ -112,3 +112,8 @@ func ParseDerivedKey(encoded string) (dk, salt []byte, time, memory uint32, thre
 
 	return dk, salt, time, memory, threads, nil
 }
+
+// Returns tre if the password is a derived key.
+func IsDerivedKey(password string) bool {
+	return dkParse.MatchString(password)
+}

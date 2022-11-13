@@ -186,6 +186,29 @@ func (tm *TokenManager) CreateRefreshToken(accessToken *jwt.Token) (refreshToken
 	return jwt.NewWithClaims(signingMethod, claims), nil
 }
 
+// CreateTokens creates and signs an access and refresh token in one step.
+func (tm *TokenManager) CreateTokens(claims *Claims) (signedAccessToken, signedRefreshToken string, err error) {
+	var accessToken, refreshToken *jwt.Token
+
+	if accessToken, err = tm.CreateAccessToken(claims); err != nil {
+		return "", "", fmt.Errorf("could not create access token: %w", err)
+	}
+
+	if refreshToken, err = tm.CreateRefreshToken(accessToken); err != nil {
+		return "", "", fmt.Errorf("could not create refresh token: %w", err)
+	}
+
+	if signedAccessToken, err = tm.Sign(accessToken); err != nil {
+		return "", "", fmt.Errorf("could not sign access token: %w", err)
+	}
+
+	if signedRefreshToken, err = tm.Sign(refreshToken); err != nil {
+		return "", "", fmt.Errorf("could not sign refresh token: %w", err)
+	}
+
+	return signedAccessToken, signedRefreshToken, nil
+}
+
 // Keys returns the map of ulid to public key for use externally.
 func (tm *TokenManager) Keys() map[ulid.ULID]*rsa.PublicKey {
 	return tm.keys

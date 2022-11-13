@@ -22,21 +22,21 @@ CREATE TYPE reading_status AS ENUM (
 CREATE TABLE IF NOT EXISTS epistles (
     id          SERIAL PRIMARY KEY,
     link        VARCHAR(2000) UNIQUE NOT NULL,
-    title       VARCHAR(512),
-    description VARCHAR(4096),
-    favicon     VARCHAR(2000),
+    title       VARCHAR(512) DEFAULT NULL,
+    description VARCHAR(4096) DEFAULT NULL,
+    favicon     VARCHAR(2000) DEFAULT NULL,
     created     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     modified    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Maps the epistles to the user that created them and information about reading
 CREATE TABLE IF NOT EXISTS reading (
-    epistle_id    INTEGER,
-    user_id       INTEGER,
+    epistle_id    INTEGER NOT NULL,
+    user_id       INTEGER NOT NULL,
     status        reading_status DEFAULT 'queued',
-    started       TIMESTAMPTZ,
-    finished      TIMESTAMPTZ,
-    archived      TIMESTAMPTZ,
+    started       TIMESTAMPTZ DEFAULT NULL,
+    finished      TIMESTAMPTZ DEFAULT NULL,
+    archived      TIMESTAMPTZ DEFAULT NULL,
     created       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     modified      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     PRIMARY KEY (epistle_id, user_id)
@@ -45,11 +45,13 @@ CREATE TABLE IF NOT EXISTS reading (
 -- Primary authentication table that holds usernames and hashed passwords
 CREATE TABLE IF NOT EXISTS users (
     id          SERIAL PRIMARY KEY,
+    full_name   VARCHAR(255) DEFAULT NULL,
     email       VARCHAR(255) UNIQUE NOT NULL,
     username    VARCHAR(255) UNIQUE NOT NULL,
     password    VARCHAR(255) NOT NULL,
     role_id     INTEGER NOT NULL,
-    last_seen   TIMESTAMPTZ,
+    last_seen   TIMESTAMPTZ DEFAULT NULL,
+    pwchanged   TIMESTAMPTZ DEFAULT NULL,
     created     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     modified    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -58,7 +60,7 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS roles (
     id          SERIAL PRIMARY KEY,
     title       VARCHAR(255) UNIQUE NOT NULL,
-    description VARCHAR(512),
+    description VARCHAR(512) DEFAULT NULL,
     created     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     modified    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -67,15 +69,15 @@ CREATE TABLE IF NOT EXISTS roles (
 CREATE TABLE IF NOT EXISTS permissions (
     id          SERIAL PRIMARY KEY,
     title       VARCHAR(255) UNIQUE NOT NULL,
-    description VARCHAR(512),
+    description VARCHAR(512) DEFAULT NULL,
     created     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     modified    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Maps the default permissions to a role
 CREATE TABLE IF NOT EXISTS role_permissions (
-    role_id       INTEGER,
-    permission_id INTEGER,
+    role_id       INTEGER NOT NULL,
+    permission_id INTEGER NOT NULL,
     created       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     modified      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     PRIMARY KEY (role_id, permission_id)

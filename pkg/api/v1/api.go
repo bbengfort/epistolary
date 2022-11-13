@@ -9,7 +9,9 @@ import (
 //===========================================================================
 
 type EpistolaryClient interface {
-	Status(ctx context.Context) (*StatusReply, error)
+	Register(context.Context, *RegisterRequest) error
+	Login(context.Context, *LoginRequest) (*LoginReply, error)
+	Status(context.Context) (*StatusReply, error)
 }
 
 //===========================================================================
@@ -38,6 +40,23 @@ type PageQuery struct {
 //===========================================================================
 // Epistolary v1 API Requests and Responses
 //===========================================================================
+
+type RegisterRequest struct {
+	FullName string `json:"full_name"`
+	Email    string `json:"email"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+type LoginRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+type LoginReply struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+}
 
 //===========================================================================
 // OpenID Configuration

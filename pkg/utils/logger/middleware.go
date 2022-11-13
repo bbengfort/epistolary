@@ -26,6 +26,7 @@ func GinLogger(server string) gin.HandlerFunc {
 		// After request
 		status := c.Writer.Status()
 		logctx := log.With().
+			Strs("errors", c.Errors.Errors()).
 			Str("path", path).
 			Str("ser_name", server).
 			Str("method", c.Request.Method).
@@ -35,16 +36,12 @@ func GinLogger(server string) gin.HandlerFunc {
 			Str("client_ip", c.ClientIP()).
 			Logger()
 
-		// This field requires us to append errors to the Gin context before a 500
-		msg := c.Errors.String()
-		if msg == "" {
-			msg = fmt.Sprintf("%s %s %s %d", server, c.Request.Method, c.Request.URL.Path, status)
-		}
+		msg := fmt.Sprintf("%s %s %s %d", server, c.Request.Method, c.Request.URL.Path, status)
 
 		switch {
 		case status >= 400 && status < 500:
 			logctx.Warn().Msg(msg)
-		case status > 500:
+		case status >= 500:
 			logctx.Error().Msg(msg)
 		default:
 			logctx.Info().Msg(msg)
