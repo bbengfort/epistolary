@@ -15,9 +15,135 @@ servers:
     - url: http://localhost:8000/v1
     - url: https://api.epistolary.app/v1
 
+components:
+    securitySchemes:
+        BearerAuth:
+            type: http
+            scheme: bearer
+            description: JWT authorization header using the Bearer scheme
+            bearerFormat: JWT
+
+    schemas:
+        ErrorReply:
+            type: object
+            required:
+                - success
+            properties:
+                success:
+                    type: boolean
+                error:
+                    type: string
+        StatusReply:
+            type: object
+            required:
+                - status
+            properties:
+                status:
+                    type: string
+                uptime:
+                    type: string
+                version:
+                    type: string
+    
+    responses:
+        Unauthorized:
+            description: User does not have permissions to perform request
+            content:
+                application/json:
+                    schema:
+                        $ref: '#/components/schemas/ErrorReply'
+        Unauthenticated:
+            description: User must be logged in to perform request
+            content:
+                application/json:
+                    schema:
+                        $ref: '#/components/schemas/ErrorReply'
+        InvalidRequest:
+            description: Invalid request
+            content:
+                application/json:
+                    schema:
+                        $ref: '#/components/schemas/ErrorReply'
+
+
+
+security:
+    - BearerAuth: []
+
 paths:
+    /register:
+        post:
+            security:
+                - {}
+            description: Create a new user on the server
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required:
+                                - email
+                                - username
+                                - password
+                            properties:
+                                full_name:
+                                    type: string
+                                email:
+                                    type: string
+                                username:
+                                    type: string
+                                password:
+                                    type: string
+            responses:
+                "204":
+                    description: User created successfully
+                "400":
+                    $ref: '#/components/responses/InvalidRequest'
+    /login:
+        post:
+            security:
+                - {}
+            description: Login to the server to get access and refresh tokens
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required:
+                                - username
+                                - password
+                            properties:
+                                username:
+                                    type: string
+                                password:
+                                    type: string
+            responses:
+                "200":
+                    description: Successful authentication
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                required:
+                                    - access_token
+                                    - refresh_token
+                                properties:
+                                    access_token:
+                                        type: string
+                                    refresh_token:
+                                        type: string
+                "401":
+                    description: Could not authenticate user
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorReply'
     /status:
         get:
+            security:
+                - {}
             description: A heartbeat endpoint for checking the status of the server
             responses:
                 "200":
@@ -25,28 +151,10 @@ paths:
                     content:
                         application/json:
                             schema:
-                                type: object
-                                required:
-                                    - status
-                                properties:
-                                    status:
-                                        type: string
-                                    uptime:
-                                        type: string
-                                    version:
-                                        type: string
+                                $ref: "#/compnents/schemas/StatusReply"
                 "503":
                     description: Unavailable or maintenance mode response
                     content:
                         application/json:
                             schema:
-                                type: object
-                                required:
-                                    - status
-                                properties:
-                                    status:
-                                        type: string
-                                    uptime:
-                                        type: string
-                                    version:
-                                        type: string
+                                $ref: "#/compnents/schemas/StatusReply"
