@@ -5,6 +5,7 @@ id = 7d0efb15-e4f4-49c5-93c3-7e0d3b35c13f
 
 [relations.collections]
 rootDirectory = postman/collections
+files[] = {"id":"3711-cdee74bd-bb2c-44b5-bd3e-340d5cd6ad98","path":"Epistolary API.json","metaData":{}}
 
 [relations.collections.metaData]
 

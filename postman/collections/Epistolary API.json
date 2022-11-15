@@ -1,0 +1,1392 @@
+{
+	"info": {
+		"_postman_id": "cdee74bd-bb2c-44b5-bd3e-340d5cd6ad98",
+		"name": "Epistolary API",
+		"description": "An API for collecting reading material from the web for easy referencing and search.\n\nContact Support:\n Name: Benjamin Bengfort\n Email: support@epistolary.app",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_uid": "3711-cdee74bd-bb2c-44b5-bd3e-340d5cd6ad98"
+	},
+	"item": [
+		{
+			"name": "reading",
+			"item": [
+				{
+					"name": "{reading ID}",
+					"item": [
+						{
+							"name": "/reading/:readingID",
+							"id": "9eca165b-d524-4e9e-95f2-ce20685d5d1b",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/reading/:readingID",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reading",
+										":readingID"
+									],
+									"variable": [
+										{
+											"key": "readingID",
+											"value": "<string>",
+											"description": "(Required) "
+										}
+									]
+								},
+								"description": "Get the detail for the reading"
+							},
+							"response": [
+								{
+									"id": "b4ef24e1-8f56-4bc7-bd9c-0418499f64bb",
+									"name": "Reading Detail",
+									"originalRequest": {
+										"method": "GET",
+										"header": [
+											{
+												"description": "Added as a part of security scheme: bearer",
+												"key": "Authorization",
+												"value": "Bearer <token>"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/reading/:readingID",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"reading",
+												":readingID"
+											],
+											"variable": [
+												{
+													"key": "readingID",
+													"value": "<string>",
+													"description": "(Required) "
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n  \"id\": \"<integer>\",\n  \"status\": \"<string>\",\n  \"link\": \"<string>\",\n  \"title\": \"<string>\",\n  \"description\": \"<string>\",\n  \"favicon\": \"<string>\",\n  \"started\": \"<string>\",\n  \"finished\": \"<string>\",\n  \"archived\": \"<string>\",\n  \"created\": \"<string>\",\n  \"modified\": \"<string>\"\n}"
+								},
+								{
+									"id": "454ccabf-9b24-46d0-be95-e7cfd55f1ed7",
+									"name": "User must be logged in to perform request",
+									"originalRequest": {
+										"method": "GET",
+										"header": [
+											{
+												"description": "Added as a part of security scheme: bearer",
+												"key": "Authorization",
+												"value": "Bearer <token>"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/reading/:readingID",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"reading",
+												":readingID"
+											],
+											"variable": [
+												{
+													"key": "readingID",
+													"value": "<string>",
+													"description": "(Required) "
+												}
+											]
+										}
+									},
+									"status": "Unauthorized",
+									"code": 401,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n  \"success\": \"<boolean>\",\n  \"error\": \"<string>\"\n}"
+								},
+								{
+									"id": "fb8085af-77cd-4a91-9339-a4e2047de89b",
+									"name": "Not Found",
+									"originalRequest": {
+										"method": "GET",
+										"header": [
+											{
+												"description": "Added as a part of security scheme: bearer",
+												"key": "Authorization",
+												"value": "Bearer <token>"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/reading/:readingID",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"reading",
+												":readingID"
+											],
+											"variable": [
+												{
+													"key": "readingID",
+													"value": "<string>",
+													"description": "(Required) "
+												}
+											]
+										}
+									},
+									"status": "Not Found",
+									"code": 404,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n  \"success\": \"<boolean>\",\n  \"error\": \"<string>\"\n}"
+								}
+							]
+						},
+						{
+							"name": "/reading/:readingID",
+							"id": "224e29bb-cec0-4afd-a02c-b5d84218b7bc",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"id\": \"<integer>\",\n  \"status\": \"<string>\",\n  \"link\": \"<string>\",\n  \"title\": \"<string>\",\n  \"description\": \"<string>\",\n  \"favicon\": \"<string>\",\n  \"started\": \"<string>\",\n  \"finished\": \"<string>\",\n  \"archived\": \"<string>\",\n  \"created\": \"<string>\",\n  \"modified\": \"<string>\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/reading/:readingID",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reading",
+										":readingID"
+									],
+									"variable": [
+										{
+											"key": "readingID",
+											"value": "<string>",
+											"description": "(Required) "
+										}
+									]
+								},
+								"description": "Update the reading"
+							},
+							"response": [
+								{
+									"id": "de2c8a9c-a2f0-43e8-848d-ea3d85f9ab9f",
+									"name": "Reading Updated",
+									"originalRequest": {
+										"method": "PUT",
+										"header": [
+											{
+												"description": "Added as a part of security scheme: bearer",
+												"key": "Authorization",
+												"value": "Bearer <token>"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"id\": \"<integer>\",\n  \"status\": \"<string>\",\n  \"link\": \"<string>\",\n  \"title\": \"<string>\",\n  \"description\": \"<string>\",\n  \"favicon\": \"<string>\",\n  \"started\": \"<string>\",\n  \"finished\": \"<string>\",\n  \"archived\": \"<string>\",\n  \"created\": \"<string>\",\n  \"modified\": \"<string>\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/reading/:readingID",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"reading",
+												":readingID"
+											],
+											"variable": [
+												{
+													"key": "readingID",
+													"value": "<string>",
+													"description": "(Required) "
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n  \"id\": \"<integer>\",\n  \"status\": \"<string>\",\n  \"link\": \"<string>\",\n  \"title\": \"<string>\",\n  \"description\": \"<string>\",\n  \"favicon\": \"<string>\",\n  \"started\": \"<string>\",\n  \"finished\": \"<string>\",\n  \"archived\": \"<string>\",\n  \"created\": \"<string>\",\n  \"modified\": \"<string>\"\n}"
+								},
+								{
+									"id": "dc5ccbd6-c9c6-427e-a851-f091e67138d7",
+									"name": "Invalid request",
+									"originalRequest": {
+										"method": "PUT",
+										"header": [
+											{
+												"description": "Added as a part of security scheme: bearer",
+												"key": "Authorization",
+												"value": "Bearer <token>"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"id\": \"<integer>\",\n  \"status\": \"<string>\",\n  \"link\": \"<string>\",\n  \"title\": \"<string>\",\n  \"description\": \"<string>\",\n  \"favicon\": \"<string>\",\n  \"started\": \"<string>\",\n  \"finished\": \"<string>\",\n  \"archived\": \"<string>\",\n  \"created\": \"<string>\",\n  \"modified\": \"<string>\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/reading/:readingID",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"reading",
+												":readingID"
+											],
+											"variable": [
+												{
+													"key": "readingID",
+													"value": "<string>",
+													"description": "(Required) "
+												}
+											]
+										}
+									},
+									"status": "Bad Request",
+									"code": 400,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n  \"success\": \"<boolean>\",\n  \"error\": \"<string>\"\n}"
+								},
+								{
+									"id": "ef246b0c-e9f4-41f6-b392-0be2e83169a2",
+									"name": "User must be logged in to perform request",
+									"originalRequest": {
+										"method": "PUT",
+										"header": [
+											{
+												"description": "Added as a part of security scheme: bearer",
+												"key": "Authorization",
+												"value": "Bearer <token>"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"id\": \"<integer>\",\n  \"status\": \"<string>\",\n  \"link\": \"<string>\",\n  \"title\": \"<string>\",\n  \"description\": \"<string>\",\n  \"favicon\": \"<string>\",\n  \"started\": \"<string>\",\n  \"finished\": \"<string>\",\n  \"archived\": \"<string>\",\n  \"created\": \"<string>\",\n  \"modified\": \"<string>\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/reading/:readingID",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"reading",
+												":readingID"
+											],
+											"variable": [
+												{
+													"key": "readingID",
+													"value": "<string>",
+													"description": "(Required) "
+												}
+											]
+										}
+									},
+									"status": "Unauthorized",
+									"code": 401,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n  \"success\": \"<boolean>\",\n  \"error\": \"<string>\"\n}"
+								},
+								{
+									"id": "81458afd-8f4e-4b64-99d8-799e44755412",
+									"name": "Not Found",
+									"originalRequest": {
+										"method": "PUT",
+										"header": [
+											{
+												"description": "Added as a part of security scheme: bearer",
+												"key": "Authorization",
+												"value": "Bearer <token>"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"id\": \"<integer>\",\n  \"status\": \"<string>\",\n  \"link\": \"<string>\",\n  \"title\": \"<string>\",\n  \"description\": \"<string>\",\n  \"favicon\": \"<string>\",\n  \"started\": \"<string>\",\n  \"finished\": \"<string>\",\n  \"archived\": \"<string>\",\n  \"created\": \"<string>\",\n  \"modified\": \"<string>\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/reading/:readingID",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"reading",
+												":readingID"
+											],
+											"variable": [
+												{
+													"key": "readingID",
+													"value": "<string>",
+													"description": "(Required) "
+												}
+											]
+										}
+									},
+									"status": "Not Found",
+									"code": 404,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n  \"success\": \"<boolean>\",\n  \"error\": \"<string>\"\n}"
+								}
+							]
+						},
+						{
+							"name": "/reading/:readingID",
+							"id": "24e80c54-7f9c-438b-901e-8e153ad79cbd",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/reading/:readingID",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reading",
+										":readingID"
+									],
+									"variable": [
+										{
+											"key": "readingID",
+											"value": "<string>",
+											"description": "(Required) "
+										}
+									]
+								},
+								"description": "Delete the reading"
+							},
+							"response": [
+								{
+									"id": "1b49b3d1-c4b2-4eae-95f1-44bcf46eb226",
+									"name": "Reading Deleted",
+									"originalRequest": {
+										"method": "DELETE",
+										"header": [
+											{
+												"description": "Added as a part of security scheme: bearer",
+												"key": "Authorization",
+												"value": "Bearer <token>"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/reading/:readingID",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"reading",
+												":readingID"
+											],
+											"variable": [
+												{
+													"key": "readingID",
+													"value": "<string>",
+													"description": "(Required) "
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "text",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "text/plain"
+										}
+									],
+									"cookie": [],
+									"body": ""
+								},
+								{
+									"id": "47943995-c8c1-4c4d-a003-44e68989cc8c",
+									"name": "User must be logged in to perform request",
+									"originalRequest": {
+										"method": "DELETE",
+										"header": [
+											{
+												"description": "Added as a part of security scheme: bearer",
+												"key": "Authorization",
+												"value": "Bearer <token>"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/reading/:readingID",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"reading",
+												":readingID"
+											],
+											"variable": [
+												{
+													"key": "readingID",
+													"value": "<string>",
+													"description": "(Required) "
+												}
+											]
+										}
+									},
+									"status": "Unauthorized",
+									"code": 401,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n  \"success\": \"<boolean>\",\n  \"error\": \"<string>\"\n}"
+								},
+								{
+									"id": "a2c27368-7ebf-421b-a4ee-288ead8df6c9",
+									"name": "Not Found",
+									"originalRequest": {
+										"method": "DELETE",
+										"header": [
+											{
+												"description": "Added as a part of security scheme: bearer",
+												"key": "Authorization",
+												"value": "Bearer <token>"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/reading/:readingID",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"reading",
+												":readingID"
+											],
+											"variable": [
+												{
+													"key": "readingID",
+													"value": "<string>",
+													"description": "(Required) "
+												}
+											]
+										}
+									},
+									"status": "Not Found",
+									"code": 404,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n  \"success\": \"<boolean>\",\n  \"error\": \"<string>\"\n}"
+								}
+							]
+						}
+					],
+					"id": "f5714b63-a09d-4225-9aad-a14071308a2a"
+				},
+				{
+					"name": "/reading",
+					"id": "b8823e71-a20f-4211-9aef-90818b04d453",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/reading?next_page_token=<string>&page_size=<integer>",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"reading"
+							],
+							"query": [
+								{
+									"key": "next_page_token",
+									"value": "<string>",
+									"description": "fetch the next page for the given token"
+								},
+								{
+									"key": "page_size",
+									"value": "<integer>",
+									"description": "limit the page size of the response"
+								}
+							]
+						},
+						"description": "List the readings associated with the logged in user"
+					},
+					"response": [
+						{
+							"id": "66996608-00ca-45ff-a8b2-c18c946bb01e",
+							"name": "Reading List",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"description": "Added as a part of security scheme: bearer",
+										"key": "Authorization",
+										"value": "Bearer <token>"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/reading?next_page_token=<string>&page_size=<integer>",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reading"
+									],
+									"query": [
+										{
+											"key": "next_page_token",
+											"value": "<string>"
+										},
+										{
+											"key": "page_size",
+											"value": "<integer>"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"readings\": [\n    {\n      \"id\": \"<integer>\",\n      \"status\": \"<string>\",\n      \"link\": \"<string>\",\n      \"title\": \"<string>\",\n      \"description\": \"<string>\",\n      \"favicon\": \"<string>\",\n      \"started\": \"<string>\",\n      \"finished\": \"<string>\",\n      \"archived\": \"<string>\",\n      \"created\": \"<string>\",\n      \"modified\": \"<string>\"\n    },\n    {\n      \"id\": \"<integer>\",\n      \"status\": \"<string>\",\n      \"link\": \"<string>\",\n      \"title\": \"<string>\",\n      \"description\": \"<string>\",\n      \"favicon\": \"<string>\",\n      \"started\": \"<string>\",\n      \"finished\": \"<string>\",\n      \"archived\": \"<string>\",\n      \"created\": \"<string>\",\n      \"modified\": \"<string>\"\n    }\n  ],\n  \"next_page_token\": \"<string>\",\n  \"prev_page_token\": \"<string>\"\n}"
+						},
+						{
+							"id": "4a230f1a-8b4f-4f53-8a34-0be11ffb80be",
+							"name": "Invalid request",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"description": "Added as a part of security scheme: bearer",
+										"key": "Authorization",
+										"value": "Bearer <token>"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/reading?next_page_token=<string>&page_size=<integer>",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reading"
+									],
+									"query": [
+										{
+											"key": "next_page_token",
+											"value": "<string>"
+										},
+										{
+											"key": "page_size",
+											"value": "<integer>"
+										}
+									]
+								}
+							},
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"success\": \"<boolean>\",\n  \"error\": \"<string>\"\n}"
+						},
+						{
+							"id": "2a436c3c-7a09-4856-9b48-9aca888a99d6",
+							"name": "User must be logged in to perform request",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"description": "Added as a part of security scheme: bearer",
+										"key": "Authorization",
+										"value": "Bearer <token>"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/reading?next_page_token=<string>&page_size=<integer>",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reading"
+									],
+									"query": [
+										{
+											"key": "next_page_token",
+											"value": "<string>"
+										},
+										{
+											"key": "page_size",
+											"value": "<integer>"
+										}
+									]
+								}
+							},
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"success\": \"<boolean>\",\n  \"error\": \"<string>\"\n}"
+						},
+						{
+							"id": "d1702a51-151d-4ad6-a1da-61f191cccb3f",
+							"name": "Not Found",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"description": "Added as a part of security scheme: bearer",
+										"key": "Authorization",
+										"value": "Bearer <token>"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/reading?next_page_token=<string>&page_size=<integer>",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reading"
+									],
+									"query": [
+										{
+											"key": "next_page_token",
+											"value": "<string>"
+										},
+										{
+											"key": "page_size",
+											"value": "<integer>"
+										}
+									]
+								}
+							},
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"success\": \"<boolean>\",\n  \"error\": \"<string>\"\n}"
+						}
+					]
+				},
+				{
+					"name": "/reading",
+					"id": "2ed3d9ab-a685-45f7-95c1-90b54f69c6f9",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"<integer>\",\n  \"status\": \"<string>\",\n  \"link\": \"<string>\",\n  \"title\": \"<string>\",\n  \"description\": \"<string>\",\n  \"favicon\": \"<string>\",\n  \"started\": \"<string>\",\n  \"finished\": \"<string>\",\n  \"archived\": \"<string>\",\n  \"created\": \"<string>\",\n  \"modified\": \"<string>\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/reading",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"reading"
+							]
+						},
+						"description": "Create a reading"
+					},
+					"response": [
+						{
+							"id": "1b342370-2fdd-4d33-8f54-5cceca508505",
+							"name": "Reading Created",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"description": "Added as a part of security scheme: bearer",
+										"key": "Authorization",
+										"value": "Bearer <token>"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"id\": \"<integer>\",\n  \"status\": \"<string>\",\n  \"link\": \"<string>\",\n  \"title\": \"<string>\",\n  \"description\": \"<string>\",\n  \"favicon\": \"<string>\",\n  \"started\": \"<string>\",\n  \"finished\": \"<string>\",\n  \"archived\": \"<string>\",\n  \"created\": \"<string>\",\n  \"modified\": \"<string>\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/reading",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reading"
+									]
+								}
+							},
+							"status": "No Content",
+							"code": 204,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"id\": \"<integer>\",\n  \"status\": \"<string>\",\n  \"link\": \"<string>\",\n  \"title\": \"<string>\",\n  \"description\": \"<string>\",\n  \"favicon\": \"<string>\",\n  \"started\": \"<string>\",\n  \"finished\": \"<string>\",\n  \"archived\": \"<string>\",\n  \"created\": \"<string>\",\n  \"modified\": \"<string>\"\n}"
+						},
+						{
+							"id": "2afde233-c701-4181-960a-ca6a8267f779",
+							"name": "Invalid request",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"description": "Added as a part of security scheme: bearer",
+										"key": "Authorization",
+										"value": "Bearer <token>"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"id\": \"<integer>\",\n  \"status\": \"<string>\",\n  \"link\": \"<string>\",\n  \"title\": \"<string>\",\n  \"description\": \"<string>\",\n  \"favicon\": \"<string>\",\n  \"started\": \"<string>\",\n  \"finished\": \"<string>\",\n  \"archived\": \"<string>\",\n  \"created\": \"<string>\",\n  \"modified\": \"<string>\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/reading",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reading"
+									]
+								}
+							},
+							"status": "Bad Request",
+							"code": 400,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"success\": \"<boolean>\",\n  \"error\": \"<string>\"\n}"
+						},
+						{
+							"id": "de7e02b2-148e-4b88-8578-1d38de7d5236",
+							"name": "User must be logged in to perform request",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"description": "Added as a part of security scheme: bearer",
+										"key": "Authorization",
+										"value": "Bearer <token>"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"id\": \"<integer>\",\n  \"status\": \"<string>\",\n  \"link\": \"<string>\",\n  \"title\": \"<string>\",\n  \"description\": \"<string>\",\n  \"favicon\": \"<string>\",\n  \"started\": \"<string>\",\n  \"finished\": \"<string>\",\n  \"archived\": \"<string>\",\n  \"created\": \"<string>\",\n  \"modified\": \"<string>\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/reading",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reading"
+									]
+								}
+							},
+							"status": "Unauthorized",
+							"code": 401,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"success\": \"<boolean>\",\n  \"error\": \"<string>\"\n}"
+						},
+						{
+							"id": "ab0b06e8-47e5-4f70-b587-0a291a55a8e4",
+							"name": "Not Found",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"description": "Added as a part of security scheme: bearer",
+										"key": "Authorization",
+										"value": "Bearer <token>"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"id\": \"<integer>\",\n  \"status\": \"<string>\",\n  \"link\": \"<string>\",\n  \"title\": \"<string>\",\n  \"description\": \"<string>\",\n  \"favicon\": \"<string>\",\n  \"started\": \"<string>\",\n  \"finished\": \"<string>\",\n  \"archived\": \"<string>\",\n  \"created\": \"<string>\",\n  \"modified\": \"<string>\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/reading",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"reading"
+									]
+								}
+							},
+							"status": "Not Found",
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"success\": \"<boolean>\",\n  \"error\": \"<string>\"\n}"
+						}
+					]
+				}
+			],
+			"id": "2732041d-7477-42a7-9810-83a6af8ff979"
+		},
+		{
+			"name": "/register",
+			"id": "f337b7a9-b04f-401d-9ce2-144e971f5c4e",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"email\": \"<string>\",\n  \"username\": \"<string>\",\n  \"password\": \"<string>\",\n  \"full_name\": \"<string>\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/register",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"register"
+					]
+				},
+				"description": "Create a new user on the server"
+			},
+			"response": [
+				{
+					"id": "85f0d023-e20d-4ffd-8af1-0e963ad8567e",
+					"name": "User created successfully",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"<string>\",\n  \"username\": \"<string>\",\n  \"password\": \"<string>\",\n  \"full_name\": \"<string>\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"register"
+							]
+						}
+					},
+					"status": "No Content",
+					"code": 204,
+					"_postman_previewlanguage": "text",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "text/plain"
+						}
+					],
+					"cookie": [],
+					"body": ""
+				},
+				{
+					"id": "81d82e0e-3356-4ef2-b1c3-a3eedc2262a0",
+					"name": "Invalid request",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"<string>\",\n  \"username\": \"<string>\",\n  \"password\": \"<string>\",\n  \"full_name\": \"<string>\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"register"
+							]
+						}
+					},
+					"status": "Bad Request",
+					"code": 400,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"success\": \"<boolean>\",\n  \"error\": \"<string>\"\n}"
+				}
+			]
+		},
+		{
+			"name": "/login",
+			"id": "444bf5be-f590-4359-89bc-105c487888ff",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"username\": \"bbengfort\",\n  \"password\": \"supersecret\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/login",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"login"
+					]
+				},
+				"description": "Login to the server to get access and refresh tokens"
+			},
+			"response": [
+				{
+					"id": "b74519e7-a0e5-4f85-b8e9-efd42ca6a428",
+					"name": "Successful authentication",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"<string>\",\n  \"password\": \"<string>\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"login"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"access_token\": \"<string>\",\n  \"refresh_token\": \"<string>\"\n}"
+				},
+				{
+					"id": "f5aa5d5b-0a60-4044-9022-4135b660dd87",
+					"name": "Could not authenticate user",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"<string>\",\n  \"password\": \"<string>\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"login"
+							]
+						}
+					},
+					"status": "Unauthorized",
+					"code": 401,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"success\": \"<boolean>\",\n  \"error\": \"<string>\"\n}"
+				}
+			]
+		},
+		{
+			"name": "/status",
+			"id": "db088028-e9c2-41ef-9e2e-60f772d08671",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/status",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"status"
+					]
+				},
+				"description": "A heartbeat endpoint for checking the status of the server"
+			},
+			"response": [
+				{
+					"id": "55d057ea-fd7b-4af1-9cf2-53f4138e8fb6",
+					"name": "Successful response",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"status"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"status\": \"<string>\",\n  \"uptime\": \"<string>\",\n  \"version\": \"<string>\"\n}"
+				},
+				{
+					"id": "53e53454-7d83-4300-bdb2-f97729bd05fb",
+					"name": "Unavailable or maintenance mode response",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"status"
+							]
+						}
+					},
+					"status": "Service Unavailable",
+					"code": 503,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"status\": \"<string>\",\n  \"uptime\": \"<string>\",\n  \"version\": \"<string>\"\n}"
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{access_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "b0d89216-48db-4dbf-9011-28eaea251f12",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "7f2432fc-9b8d-46a2-a138-147f6b2a6c85",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"id": "67dca74d-6316-40c0-81b6-366d5e83db79",
+			"key": "baseUrl",
+			"value": "http://localhost:8000/v1",
+			"type": "string"
+		}
+	]
+}

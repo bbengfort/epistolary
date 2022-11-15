@@ -100,6 +100,12 @@ components:
             description: "fetch the previous page for the given token"
             schema:
                 type: string
+        ReadingID:
+            name: readingID
+            in: path
+            required: true
+            schema:
+                type: string
 
     responses:
         Unauthorized:
@@ -248,9 +254,11 @@ paths:
                 "404":
                     $ref: '#/components/responses/NotFound'
 
-    /reading/:readingID:
+    /reading/{readingID}:
         get:
             description: Get the detail for the reading
+            parameters:
+                - $ref: '#/components/parameters/ReadingID'
             responses:
                 "200":
                     description: Reading Detail
@@ -264,6 +272,8 @@ paths:
                     $ref: '#/components/responses/NotFound'
         put:
             description: "Update the reading"
+            parameters:
+                - $ref: '#/components/parameters/ReadingID'
             requestBody:
                 required: true
                 content:
@@ -286,6 +296,8 @@ paths:
                 
         delete:
             description: "Delete the reading"
+            parameters:
+                - $ref: '#/components/parameters/ReadingID'
             responses:
                 "200":
                     description: Reading Deleted
