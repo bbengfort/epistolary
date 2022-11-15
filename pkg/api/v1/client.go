@@ -11,6 +11,8 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"time"
+
+	"github.com/google/go-querystring/query"
 )
 
 // New creates a new api.v1 API client that implements the EpistolaryClient interface.
@@ -75,6 +77,87 @@ func (s *APIv1) Login(ctx context.Context, in *LoginRequest) (out *LoginReply, e
 
 	// TODO: save access and refresh token for follow up request handling
 	return out, nil
+}
+
+func (s *APIv1) ListReadings(ctx context.Context, in *PageQuery) (out *ReadingPage, err error) {
+	var params url.Values
+	if params, err = query.Values(in); err != nil {
+		return nil, fmt.Errorf("could not encode query params: %w", err)
+	}
+
+	//  Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodGet, "/v1/reading", nil, &params); err != nil {
+		return nil, err
+	}
+
+	out = &ReadingPage{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+func (s *APIv1) CreateReading(ctx context.Context, in *Reading) (out *Reading, err error) {
+	//  Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodPost, "/v1/reading", in, nil); err != nil {
+		return nil, err
+	}
+
+	out = &Reading{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+func (s *APIv1) FetchReading(ctx context.Context, id int64) (out *Reading, err error) {
+	//  Make the HTTP request
+	endpoint := fmt.Sprintf("/v1/reading/%d", id)
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodGet, endpoint, nil, nil); err != nil {
+		return nil, err
+	}
+
+	out = &Reading{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+func (s *APIv1) UpdateReading(ctx context.Context, in *Reading) (out *Reading, err error) {
+	//  Make the HTTP request
+	endpoint := fmt.Sprintf("/v1/reading/%d", in.ID)
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodPut, endpoint, in, nil); err != nil {
+		return nil, err
+	}
+
+	out = &Reading{}
+	if _, err = s.Do(req, out, true); err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+func (s *APIv1) DeleteReading(ctx context.Context, id int64) (err error) {
+	//  Make the HTTP request
+	endpoint := fmt.Sprintf("/v1/reading/%d", id)
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodDelete, endpoint, nil, nil); err != nil {
+		return err
+	}
+
+	if _, err = s.Do(req, nil, true); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *APIv1) Status(ctx context.Context) (out *StatusReply, err error) {

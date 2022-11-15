@@ -1,6 +1,10 @@
 package tokens
 
-import jwt "github.com/golang-jwt/jwt/v4"
+import (
+	"strconv"
+
+	jwt "github.com/golang-jwt/jwt/v4"
+)
 
 // Claims implements custom claims for the Epistolary application.
 type Claims struct {
@@ -10,6 +14,14 @@ type Claims struct {
 	Email       string   `json:"email,omitempty"`
 	Role        string   `json:"role,omitempty"`
 	Permissions []string `json:"permissions,omitempty"`
+}
+
+func (c *Claims) SetSubjectID(uid int64) {
+	c.Subject = strconv.FormatInt(uid, 16)
+}
+
+func (c Claims) SubjectID() (int64, error) {
+	return strconv.ParseInt(c.Subject, 16, 64)
 }
 
 func (c Claims) HasPermission(required string) bool {

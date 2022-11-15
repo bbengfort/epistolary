@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/bbengfort/epistolary/pkg/api/v1"
@@ -12,7 +11,7 @@ import (
 	"github.com/bbengfort/epistolary/pkg/server/tokens"
 	"github.com/bbengfort/epistolary/pkg/server/users"
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/rs/zerolog/log"
 )
 
 func (s *Server) Register(c *gin.Context) {
@@ -100,13 +99,11 @@ func (s *Server) Login(c *gin.Context) {
 	// Create the access and refresh tokens from the claims
 	out = &api.LoginReply{}
 	claims := &tokens.Claims{
-		RegisteredClaims: jwt.RegisteredClaims{
-			Subject: strconv.FormatInt(user.ID, 16),
-		},
 		Name:     user.FullName.String,
 		Username: user.Username,
 		Email:    user.Email,
 	}
+	claims.SetSubjectID(user.ID)
 
 	// Role and permissions should already be on the user from the earlier request.
 	role, _ := user.Role(c.Request.Context(), false)
@@ -165,17 +162,20 @@ func (s *Server) Authorize(permissions ...string) gin.HandlerFunc {
 		// Get claims
 		value, exists := c.Get(UserClaims)
 		if !exists || value == nil {
+			log.Debug().Bool("exists", exists).Msg("user claims interface doesn't exist or is nil")
 			c.AbortWithStatusJSON(http.StatusUnauthorized, api.ErrorResponse("authorization required"))
 			return
 		}
 
 		claims, ok := value.(*tokens.Claims)
 		if !ok {
+			log.Debug().Bool("ok", ok).Msg("user claims interface is not a *tokens.Claims")
 			c.AbortWithStatusJSON(http.StatusUnauthorized, api.ErrorResponse("authorization required"))
 			return
 		}
 
 		if !claims.HasAllPermissions(permissions...) {
+			log.Trace().Strs("permissions", permissions).Strs("claims", claims.Permissions).Msg("does not have required permissions")
 			c.AbortWithStatusJSON(http.StatusUnauthorized, api.ErrorResponse("authorization required"))
 			return
 		}
@@ -194,4 +194,26 @@ func GetAccessToken(c *gin.Context) (tks string, err error) {
 		return "", errors.New("could not parse Bearer token from Authorization header")
 	}
 	return "", errors.New("no access token found in request")
+}
+
+func GetUserClaims(c *gin.Context) (*tokens.Claims, error) {
+	// Get claims
+	value, exists := c.Get(UserClaims)
+	if !exists || value == nil {
+		return nil, errors.New("no user claims exist on request")
+	}
+
+	claims, ok := value.(*tokens.Claims)
+	if !ok {
+		return nil, errors.New("incorrect claims type stored on context")
+	}
+	return claims, nil
+}
+
+func GetUserID(c *gin.Context) (int64, error) {
+	claims, err := GetUserClaims(c)
+	if err != nil {
+		return 0, err
+	}
+	return claims.SubjectID()
 }

@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"time"
 )
 
 //===========================================================================
@@ -12,6 +13,12 @@ type EpistolaryClient interface {
 	Register(context.Context, *RegisterRequest) error
 	Login(context.Context, *LoginRequest) (*LoginReply, error)
 	Status(context.Context) (*StatusReply, error)
+
+	ListReadings(context.Context, *PageQuery) (*ReadingPage, error)
+	CreateReading(context.Context, *Reading) (*Reading, error)
+	FetchReading(_ context.Context, id int64) (*Reading, error)
+	UpdateReading(context.Context, *Reading) (*Reading, error)
+	DeleteReading(_ context.Context, id int64) error
 }
 
 //===========================================================================
@@ -56,6 +63,26 @@ type LoginRequest struct {
 type LoginReply struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
+}
+
+type ReadingPage struct {
+	Readings      []*Reading `json:"readings"`
+	NextPageToken string     `json:"next_page_token"`
+	PrevPageToken string     `json:"prev_page_token"`
+}
+
+type Reading struct {
+	ID          int64     `json:"id,omitempty"`
+	Status      string    `json:"staus,omitempty"`
+	Link        string    `json:"link"`
+	Title       string    `json:"title,omitempty"`
+	Description string    `json:"description,omitempty"`
+	Favicon     string    `json:"favicon,omitempty"`
+	Started     time.Time `json:"started,omitempty"`
+	Finished    time.Time `json:"finished,omitempty"`
+	Archived    time.Time `json:"archived,omitempty"`
+	Created     time.Time `json:"created,omitempty"`
+	Modified    time.Time `json:"modified,omitempty"`
 }
 
 //===========================================================================
