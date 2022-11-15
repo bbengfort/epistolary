@@ -44,7 +44,63 @@ components:
                     type: string
                 version:
                     type: string
+        Reading:
+            type: object
+            properties:
+                id:
+                    type: integer
+                status:
+                    type: string
+                link:
+                    type: string
+                title:
+                    type: string
+                description:
+                    type: string
+                favicon:
+                    type: string
+                started:
+                    type: string
+                finished:
+                    type: string
+                archived:
+                    type: string
+                created:
+                    type: string
+                modified:
+                    type: string
+        ReadingPage:
+            type: object
+            properties:
+                readings: 
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/Reading'
+                next_page_token:
+                    type: string
+                prev_page_token:
+                    type: string
     
+    parameters:
+        PageSize:
+            name: page_size
+            in: query
+            description: "limit the page size of the response"
+            schema:
+                type: integer
+        NextPageToken:
+            name: next_page_token
+            in: query
+            description: "fetch the next page for the given token"
+            schema:
+                type: string
+        PrevPageToken:
+            name: prev_page_token
+            in: query
+            description: "fetch the previous page for the given token"
+            schema:
+                type: string
+
     responses:
         Unauthorized:
             description: User does not have permissions to perform request
@@ -64,7 +120,18 @@ components:
                 application/json:
                     schema:
                         $ref: '#/components/schemas/ErrorReply'
-
+        NotFound:
+            description: Not Found
+            content:
+                application/json:
+                    schema:
+                        $ref: '#/components/schemas/ErrorReply'
+        InternalError:
+            description: Internal error
+            content:
+                application/json:
+                    schema:
+                        $ref: '#/components/schemas/ErrorReply'
 
 
 security:
@@ -140,6 +207,93 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/ErrorReply'
+    /reading:
+        get:
+            description: List the readings associated with the logged in user
+            parameters:
+                - $ref: '#/components/parameters/NextPageToken'
+                - $ref: '#/components/parameters/PageSize'
+            responses:
+                "200":
+                    description: Reading List
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ReadingPage"
+                "400":
+                    $ref: '#/components/responses/InvalidRequest'
+                "401":
+                    $ref: '#/components/responses/Unauthenticated'
+                "404":
+                    $ref: '#/components/responses/NotFound'
+        post:
+            description: Create a reading
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/Reading'
+            responses:
+                "204":
+                    description: "Reading Created"
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Reading'
+                "400":
+                    $ref: '#/components/responses/InvalidRequest'
+                "401":
+                    $ref: '#/components/responses/Unauthenticated'
+                "404":
+                    $ref: '#/components/responses/NotFound'
+
+    /reading/:readingID:
+        get:
+            description: Get the detail for the reading
+            responses:
+                "200":
+                    description: Reading Detail
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Reading'
+                "401":
+                    $ref: '#/components/responses/Unauthenticated'
+                "404":
+                    $ref: '#/components/responses/NotFound'
+        put:
+            description: "Update the reading"
+            requestBody:
+                required: true
+                content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Reading'
+            responses:
+                "200":
+                    description: Reading Updated
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Reading'
+                "400":
+                    $ref: '#/components/responses/InvalidRequest'
+                "401":
+                    $ref: '#/components/responses/Unauthenticated'
+                "404":
+                    $ref: '#/components/responses/NotFound'
+                
+        delete:
+            description: "Delete the reading"
+            responses:
+                "200":
+                    description: Reading Deleted
+                "401":
+                    $ref: '#/components/responses/Unauthenticated'
+                "404":
+                    $ref: '#/components/responses/NotFound'
+
     /status:
         get:
             security:
@@ -151,10 +305,10 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: "#/compnents/schemas/StatusReply"
+                                $ref: "#/components/schemas/StatusReply"
                 "503":
                     description: Unavailable or maintenance mode response
                     content:
                         application/json:
                             schema:
-                                $ref: "#/compnents/schemas/StatusReply"
+                                $ref: "#/components/schemas/StatusReply"
