@@ -68,6 +68,7 @@ const (
 	HeaderETag            = "ETag"
 	HeaderLastModified    = "Last-Modified"
 	HeaderContentEncoding = "Content-Encoding"
+	HeaderContentType     = "Content-Type"
 )
 
 // SetClient allows you to specify an alternative http.Client to the default one

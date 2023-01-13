@@ -118,10 +118,18 @@ func main() {
 				},
 			},
 			{
-				Name:     "fetch",
-				Usage:    "fetch a webpage to see how it is parsed",
-				Category: "debug",
-				Action:   fetchURL,
+				Name:      "fetch",
+				Usage:     "fetch a webpage or icon to see how it is parsed",
+				ArgsUsage: "url [url ...]",
+				Category:  "debug",
+				Action:    fetchURL,
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:    "icon",
+						Aliases: []string{"i"},
+						Usage:   "check if an icon exists",
+					},
+				},
 			},
 		},
 	}
@@ -274,6 +282,16 @@ func fetchURL(c *cli.Context) (err error) {
 		var doc *fetch.Document
 		if doc, err = fetch.Fetch(ctx, c.Args().Get(i)); err != nil {
 			return cli.Exit(err, 1)
+		}
+
+		if c.Bool("icon") {
+			if doc.FaviconCheck, err = fetch.CheckIcon(ctx, doc.Favicon); err != nil {
+				return cli.Exit(err, 1)
+			}
+
+			if !doc.FaviconCheck {
+				doc.Favicon = ""
+			}
 		}
 
 		docs = append(docs, doc)
