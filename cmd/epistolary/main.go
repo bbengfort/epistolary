@@ -2,7 +2,12 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -14,6 +19,7 @@ import (
 	"github.com/bbengfort/epistolary/pkg/server/db/schema"
 	"github.com/bbengfort/epistolary/pkg/server/fetch"
 	"github.com/joho/godotenv"
+	ulid "github.com/oklog/ulid/v2"
 	"github.com/urfave/cli/v2"
 )
 
@@ -79,6 +85,25 @@ func main() {
 				},
 			},
 			{
+				Name:     "tokenkey",
+				Usage:    "generate an RSA token key pair and ksuid for JWT token signing",
+				Category: "admin",
+				Action:   generateTokenKey,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "out",
+						Aliases: []string{"o"},
+						Usage:   "path to write keys out to (optional, will be saved as ksuid.pem by default)",
+					},
+					&cli.IntFlag{
+						Name:    "size",
+						Aliases: []string{"s"},
+						Usage:   "number of bits for the generated keys",
+						Value:   4096,
+					},
+				},
+			},
+			{
 				Name:     "status",
 				Usage:    "send a status request to the epistolary api",
 				Category: "client",
@@ -87,7 +112,8 @@ func main() {
 					&cli.StringFlag{
 						Name:    "url",
 						Aliases: []string{"u"},
-						Value:   "http://localhost:8000",
+						Value:   "https://api.epistolary.app",
+						EnvVars: []string{"EPISTOLARY_ENDPOINT"},
 					},
 				},
 			},
@@ -168,6 +194,42 @@ func schemaVersion(c *cli.Context) (err error) {
 	if err = json.NewEncoder(os.Stdout).Encode(vers); err != nil {
 		return cli.Exit(err, 1)
 	}
+	return nil
+}
+
+//===========================================================================
+// Admin Actions
+//===========================================================================
+
+func generateTokenKey(c *cli.Context) (err error) {
+	// Create ksuid and determine outpath
+	keyid := ulid.Make()
+
+	var out string
+	if out = c.String("out"); out == "" {
+		out = fmt.Sprintf("%s.pem", keyid)
+	}
+
+	// Generate RSA keys using crypto random
+	var key *rsa.PrivateKey
+	if key, err = rsa.GenerateKey(rand.Reader, c.Int("size")); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	// Open file to PEM encode keys to
+	var f *os.File
+	if f, err = os.OpenFile(out, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	if err = pem.Encode(f, &pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: x509.MarshalPKCS1PrivateKey(key),
+	}); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	fmt.Printf("RSA key id: %s -- saved with PEM encoding to %s\n", keyid, out)
 	return nil
 }
 
