@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/andybalholm/brotli"
@@ -109,7 +110,7 @@ func (f *HTMLFetcher) Fetch(ctx context.Context) (doc *Document, err error) {
 	})
 
 	tree.Find("link").EachWithBreak(func(index int, item *goquery.Selection) bool {
-		if item.AttrOr("rel", "") == "icon" {
+		if item.AttrOr("rel", "") == "icon" || item.AttrOr("rel", "") == "shortcut icon" {
 			doc.Favicon = item.AttrOr("href", "")
 			if doc.Favicon != "" {
 				return false
@@ -118,6 +119,10 @@ func (f *HTMLFetcher) Fetch(ctx context.Context) (doc *Document, err error) {
 		return true
 	})
 
+	if doc.Favicon == "" {
+		// Default to the favicon.ico at the root of the domain.
+		doc.Favicon = req.URL.ResolveReference(&url.URL{Path: "/favicon.ico"}).String()
+	}
 	return doc, nil
 }
 
@@ -137,8 +142,9 @@ func (f *HTMLFetcher) newRequest(ctx context.Context) (req *http.Request, err er
 }
 
 type Document struct {
-	Link        string
-	Title       string
-	Description string
-	Favicon     string
+	Link         string `json:"link"`
+	Title        string `json:"title"`
+	Description  string `json:"description"`
+	Favicon      string `json:"favicon"`
+	FaviconCheck bool   `json:"favicon_exists,omitempty"`
 }
