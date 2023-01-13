@@ -59,11 +59,6 @@ jobs:
         with:
           path: ${{ env.GOPATH }}/src/github.com/bbengfort/epistolary
 
-      - name: Install Protoc
-        uses: arduino/setup-protoc@v1
-        with:
-          version: "3.x"
-
       - name: Install Dependencies
         run: |
           go version
@@ -102,11 +97,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           path: ${{ env.GOPATH }}/src/github.com/bbengfort/epistolary
-
-      - name: Install Protoc
-        uses: arduino/setup-protoc@v1
-        with:
-          version: "3.x"
 
       - name: Install Dependencies
         run: |
