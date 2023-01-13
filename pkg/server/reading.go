@@ -9,16 +9,17 @@ import (
 	"github.com/bbengfort/epistolary/pkg/api/v1"
 	"github.com/bbengfort/epistolary/pkg/server/epistles"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 )
 
 func (s *Server) ListReadings(c *gin.Context) {
 	var (
-		err   error
-		query *api.PageQuery
-		out   *api.ReadingPage
+		err error
+		out *api.ReadingPage
 	)
 
 	// TODO: add pagination
+	query := &api.PageQuery{}
 	if err = c.BindQuery(&query); err != nil {
 		c.Error(err)
 		c.JSON(http.StatusBadRequest, api.ErrorResponse("could not parse page query"))
@@ -69,11 +70,11 @@ func (s *Server) ListReadings(c *gin.Context) {
 func (s *Server) CreateReading(c *gin.Context) {
 	var (
 		err     error
-		reading *api.Reading
 		read    *epistles.Reading
 		epistle *epistles.Epistle
 	)
 
+	reading := &api.Reading{}
 	if err = c.BindJSON(&reading); err != nil {
 		c.Error(err)
 		c.JSON(http.StatusBadRequest, api.ErrorResponse("could not parse reading input"))
@@ -105,6 +106,10 @@ func (s *Server) CreateReading(c *gin.Context) {
 	}
 
 	epistle, _ = read.Epistle(c.Request.Context(), false)
+	if err = epistle.Sync(c.Request.Context()); err != nil {
+		log.Error().Err(err).Msg("could not sync epistle")
+	}
+
 	reading.ID = read.EpistleID
 	reading.Status = string(read.Status)
 	reading.Link = epistle.Link
@@ -121,14 +126,10 @@ func (s *Server) CreateReading(c *gin.Context) {
 }
 
 func (s *Server) FetchReading(c *gin.Context) {
-	var (
-		err       error
-		readingID string
-		reading   *api.Reading
-	)
+	var err error
+	reading := &api.Reading{}
+	readingID := c.Param("readingID")
 
-	readingID = c.Param("readingID")
-	reading = &api.Reading{}
 	if reading.ID, err = strconv.ParseInt(readingID, 10, 64); err != nil {
 		c.Error(err)
 		c.JSON(http.StatusNotFound, api.ErrorResponse("reading not found"))
