@@ -32,7 +32,27 @@ func main() {
 		Name:    "epistolary",
 		Version: pkg.Version(),
 		Usage:   "the epistolary api server and management tools",
-		Flags:   []cli.Flag{},
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:    "url",
+				Aliases: []string{"u"},
+				Usage:   "the endpoint for client requests",
+				Value:   "https://api.epistolary.app",
+				EnvVars: []string{"EPISTOLARY_ENDPOINT"},
+			},
+			&cli.StringFlag{
+				Name:    "username",
+				Aliases: []string{"U"},
+				Usage:   "username for authenticating client requests",
+				EnvVars: []string{"EPISTOLARY_USERNAME"},
+			},
+			&cli.StringFlag{
+				Name:    "password",
+				Aliases: []string{"P"},
+				Usage:   "password for authenticating client requests",
+				EnvVars: []string{"EPISTOLARY_PASSWORD"},
+			},
+		},
 		Commands: []*cli.Command{
 			{
 				Name:     "serve",
@@ -108,14 +128,7 @@ func main() {
 				Usage:    "send a status request to the epistolary api",
 				Category: "client",
 				Action:   status,
-				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:    "url",
-						Aliases: []string{"u"},
-						Value:   "https://api.epistolary.app",
-						EnvVars: []string{"EPISTOLARY_ENDPOINT"},
-					},
-				},
+				Flags:    []cli.Flag{},
 			},
 			{
 				Name:      "fetch",
