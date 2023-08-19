@@ -69,7 +69,7 @@ func Create(ctx context.Context, userID int64, link string) (r *Reading, err err
 
 const (
 	countReadingSQL = "SELECT count(epistle_id) FROM reading WHERE user_id=$1"
-	listReadingSQL  = "SELECT r.epistle_id, r.status, e.id, e.link, e.title FROM reading r JOIN epistles e ON r.epistle_id=e.id WHERE r.user_id=$1"
+	listReadingSQL  = "SELECT r.epistle_id, r.status, e.id, e.link, e.title, r.created, r.modified FROM reading r JOIN epistles e ON r.epistle_id=e.id WHERE r.user_id=$1"
 )
 
 // List readings for the specified user.
@@ -103,7 +103,9 @@ func List(ctx context.Context, userID int64) (r []*Reading, err error) {
 			&reading.Status,
 			&epistle.ID,
 			&epistle.Link,
-			&epistle.Title); err != nil {
+			&epistle.Title,
+			&reading.Created,
+			&reading.Modified); err != nil {
 			return nil, err
 		}
 
