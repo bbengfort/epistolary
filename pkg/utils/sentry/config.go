@@ -15,6 +15,7 @@ type Config struct {
 	Release          string  `split_words:"true"`
 	TrackPerformance bool    `split_words:"true" default:"false"`
 	SampleRate       float64 `split_words:"true" default:"0.2"`
+	ReportErrors     bool    `split_words:"true" default:"true"`
 	Debug            bool    `default:"false"`
 }
 

@@ -1,14 +1,19 @@
 package sentry
 
 import (
+	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/getsentry/sentry-go"
 	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-gonic/gin"
+	"github.com/oklog/ulid/v2"
 	"github.com/rs/zerolog/log"
 )
+
+const HeaderRequestID = "X-Request-ID"
 
 // Initialize the Sentry SDK with the configuration; must be called before servers are started
 func Init(conf Config) (err error) {
@@ -32,8 +37,8 @@ func Flush(timeout time.Duration) bool {
 func TrackPerformance(tags map[string]string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Setup span performance prior to request:
-		request := fmt.Sprintf("%s %s", c.Request.Method, c.Request.URL.Path)
-		span := sentry.StartSpan(c.Request.Context(), "api", sentry.TransactionName(request))
+		request := TransactionName(c)
+		span := sentry.StartSpan(c.Request.Context(), "api", sentry.WithTransactionName(request))
 		for k, v := range tags {
 			span.SetTag(k, v)
 		}
@@ -48,13 +53,58 @@ func TrackPerformance(tags map[string]string) gin.HandlerFunc {
 func UseTags(tags map[string]string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if hub := sentrygin.GetHubFromContext(c); hub != nil {
-			for k, v := range tags {
-				hub.Scope().SetTag(k, v)
+			// Set a unique request-ID either from the header or generated
+			var requestID string
+			if requestID = c.Request.Header.Get(HeaderRequestID); requestID == "" {
+				requestID = ulid.Make().String()
 			}
+			c.Set("request_id", requestID)
 
-			hub.Scope().SetTag("path", c.Request.URL.Path)
-			hub.Scope().SetTag("method", c.Request.Method)
+			hub.ConfigureScope(func(scope *sentry.Scope) {
+				scope.SetTags(tags)
+				scope.SetTag("method", c.Request.Method)
+				scope.SetTag("path", c.Request.URL.Path)
+				scope.SetTag("request_id", requestID)
+			})
+
 		}
 		c.Next()
 	}
+}
+
+// Gin middleware to capture errors set on the gin context.
+func ReportErrors(conf Config) gin.HandlerFunc {
+	if !conf.UseSentry() || !conf.ReportErrors {
+		return nil
+	}
+
+	return func(c *gin.Context) {
+		// Handle errors after the request is complete
+		c.Next()
+
+		// If there are errors send them to Sentry
+		if len(c.Errors) > 0 {
+			if hub := sentrygin.GetHubFromContext(c); hub != nil {
+				status := c.Writer.Status()
+				hub.ConfigureScope(func(scope *sentry.Scope) {
+					scope.SetTag("status", strconv.Itoa(status))
+				})
+
+				for _, err := range c.Errors {
+					hub.CaptureException(err)
+				}
+			}
+		}
+	}
+}
+
+func TransactionName(c *gin.Context) string {
+	return fmt.Sprintf("%s %s", c.Request.Method, c.Request.URL.Path)
+}
+
+func CloneContext(c *gin.Context) context.Context {
+	if hub := sentrygin.GetHubFromContext(c); hub != nil {
+		return sentry.SetHubOnContext(context.Background(), hub.Clone())
+	}
+	return context.Background()
 }
