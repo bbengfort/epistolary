@@ -36,7 +36,7 @@ LABEL description="Epistolary API Server"
 
 # Ensure ca-certificates are up to date
 RUN set -x && apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y ca-certificates && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y ca-certificates postgresql-client && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy the binary to the production image from the builder stage
