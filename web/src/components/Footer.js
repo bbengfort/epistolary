@@ -14,7 +14,7 @@ const Footer = () => {
       } catch (error) {
         if (error.response) {
           // Handle maintenance mode
-          if (error.response.status == 503) {
+          if (error.response.status === 503) {
             setAPIStatus(error.response.data);
             return
           }

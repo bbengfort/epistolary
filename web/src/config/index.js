@@ -17,7 +17,7 @@ const config = {
 }
 
 export const isProduction = () => {
-  return config.environment == 'production';
+  return config.environment === 'production';
 }
 
 export default config;
