@@ -1,12 +1,19 @@
 import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+
+import HomePage from './pages/HomePage';
+import LoginPage from './pages/LoginPage';
+import usePageTracking from './analytics/ga4';
+
 
 function App() {
+  usePageTracking();
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <h1>Epistolary</h1>
-      </header>
-    </div>
+    <Routes>
+      <Route path="/" element={<HomePage />} />
+      <Route path="/login" element={<LoginPage />} />
+    </Routes>
   );
 }
 
