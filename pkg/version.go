@@ -16,13 +16,7 @@ var GitVersion string
 
 // Version returns the semantic version for the current build.
 func Version() string {
-	var versionCore string
-	if VersionPatch > 0 {
-		versionCore = fmt.Sprintf("%d.%d.%d", VersionMajor, VersionMinor, VersionPatch)
-	} else {
-		versionCore = fmt.Sprintf("%d.%d", VersionMajor, VersionMinor)
-	}
-
+	versionCore := fmt.Sprintf("%d.%d.%d", VersionMajor, VersionMinor, VersionPatch)
 	if VersionReleaseLevel != "" {
 		if VersionReleaseNumber > 0 {
 			versionCore = fmt.Sprintf("%s-%s.%d", versionCore, VersionReleaseLevel, VersionReleaseNumber)
