@@ -8,8 +8,8 @@ import (
 
 	"github.com/bbengfort/epistolary/pkg/api/v1"
 	"github.com/bbengfort/epistolary/pkg/server/epistles"
+	"github.com/bbengfort/epistolary/pkg/utils/sentry"
 	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog/log"
 )
 
 func (s *Server) ListReadings(c *gin.Context) {
@@ -28,7 +28,7 @@ func (s *Server) ListReadings(c *gin.Context) {
 
 	var userID int64
 	if userID, err = GetUserID(c); err != nil {
-		c.Error(err)
+		sentry.Error(c).Err(err).Msg("could not parse userID from request")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not process request"))
 		return
 	}
@@ -36,7 +36,7 @@ func (s *Server) ListReadings(c *gin.Context) {
 	// Fetch the readings for the user
 	var reads []*epistles.Reading
 	if reads, err = epistles.List(c.Request.Context(), userID); err != nil {
-		c.Error(err)
+		sentry.Error(c).Err(err).Msg("could not fech readings from database")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not fetch readings"))
 		return
 	}
@@ -93,21 +93,21 @@ func (s *Server) CreateReading(c *gin.Context) {
 
 	var userID int64
 	if userID, err = GetUserID(c); err != nil {
-		c.Error(err)
+		sentry.Error(c).Err(err).Msg("could not parse user id")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not process request"))
 		return
 	}
 
 	if read, err = epistles.Create(c.Request.Context(), userID, reading.Link); err != nil {
 		// TODO: handle constraint violations better
-		c.Error(err)
+		sentry.Error(c).Err(err).Msg("could not create reading in database")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
 		return
 	}
 
 	epistle, _ = read.Epistle(c.Request.Context(), false)
 	if err = epistle.Sync(c.Request.Context()); err != nil {
-		log.Error().Err(err).Msg("could not sync epistle")
+		sentry.Error(c).Err(err).Msg("could not sync epistle")
 	}
 
 	reading.ID = read.EpistleID
@@ -138,7 +138,7 @@ func (s *Server) FetchReading(c *gin.Context) {
 
 	var userID int64
 	if userID, err = GetUserID(c); err != nil {
-		c.Error(err)
+		sentry.Error(c).Err(err).Msg("could not parse user id")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not process request"))
 		return
 	}
@@ -150,7 +150,7 @@ func (s *Server) FetchReading(c *gin.Context) {
 			return
 		}
 
-		c.Error(err)
+		sentry.Error(c).Err(err).Msg("could not fetch readings from database")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not process request"))
 		return
 	}

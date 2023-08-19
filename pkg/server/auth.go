@@ -10,6 +10,9 @@ import (
 	"github.com/bbengfort/epistolary/pkg/server/passwd"
 	"github.com/bbengfort/epistolary/pkg/server/tokens"
 	"github.com/bbengfort/epistolary/pkg/server/users"
+	"github.com/bbengfort/epistolary/pkg/utils/sentry"
+	sentrylib "github.com/getsentry/sentry-go"
+	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 )
@@ -43,7 +46,7 @@ func (s *Server) Register(c *gin.Context) {
 	// Create an argon2 derived key for storing the password
 	var err error
 	if user.Password, err = passwd.CreateDerivedKey(in.Password); err != nil {
-		c.Error(err)
+		sentry.Error(c).Err(err).Msg("could not create derived key")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not register user"))
 		return
 	}
@@ -51,7 +54,7 @@ func (s *Server) Register(c *gin.Context) {
 	// Store the user in the database
 	// TODO: handle uniqueness constraints (e.g. username already taken; email already registered, etc.)
 	if err = user.Create(c.Request.Context()); err != nil {
-		c.Error(err)
+		sentry.Error(c).Err(err).Msg("could not create user in database")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not register user"))
 		return
 	}
@@ -111,14 +114,14 @@ func (s *Server) Login(c *gin.Context) {
 	claims.Permissions, _ = user.Permissions(c.Request.Context(), false)
 
 	if out.AccessToken, out.RefreshToken, err = s.tokens.CreateTokens(claims); err != nil {
-		c.Error(err)
+		sentry.Error(c).Err(err).Msg("could not create access and refresh tokens")
 		c.JSON(http.StatusUnauthorized, api.ErrorResponse("authentication failed"))
 		return
 	}
 
 	// Update the last_seen timestamp for the user
 	if err = user.UpdateLastSeen(c.Request.Context()); err != nil {
-		c.Error(err)
+		sentry.Error(c).Err(err).Msg("could not update user last seen")
 		c.JSON(http.StatusUnauthorized, api.ErrorResponse("authentication failed"))
 		return
 	}
@@ -154,6 +157,17 @@ func (s *Server) Authenticate(c *gin.Context) {
 
 	// Add claims to context for use in downstream processing and continue
 	c.Set(UserClaims, claims)
+
+	// Specify user for Sentry if Sentry is configured
+	if hub := sentrygin.GetHubFromContext(c); hub != nil {
+		hub.Scope().SetUser(sentrylib.User{
+			ID:        claims.Subject,
+			Email:     claims.Email,
+			Name:      claims.Name,
+			IPAddress: c.ClientIP(),
+		})
+	}
+
 	c.Next()
 }
 

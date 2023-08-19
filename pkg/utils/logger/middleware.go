@@ -34,6 +34,7 @@ func GinLogger(server string) gin.HandlerFunc {
 			Int("resp_bytes", c.Writer.Size()).
 			Int("status", status).
 			Str("client_ip", c.ClientIP()).
+			Str("request_id", c.GetString("request_id")).
 			Logger()
 
 		msg := fmt.Sprintf("%s %s %s %d", server, c.Request.Method, c.Request.URL.Path, status)

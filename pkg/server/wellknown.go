@@ -5,10 +5,10 @@ import (
 	"net/url"
 
 	"github.com/bbengfort/epistolary/pkg/api/v1"
+	"github.com/bbengfort/epistolary/pkg/utils/sentry"
 	"github.com/gin-gonic/gin"
 	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwk"
-	"github.com/rs/zerolog/log"
 )
 
 // JWKS returns the JSON web key set for the public RSA keys that are currently being
@@ -19,32 +19,32 @@ func (s *Server) JWKS(c *gin.Context) {
 	for keyid, pubkey := range s.tokens.Keys() {
 		key, err := jwk.FromRaw(pubkey)
 		if err != nil {
-			log.Error().Err(err).Str("kid", keyid.String()).Msg("could not parse tokens public key")
+			sentry.Error(c).Err(err).Str("kid", keyid.String()).Msg("could not parse tokens public key")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse("an internal error occurred"))
 			return
 		}
 
 		if err = key.Set(jwk.KeyIDKey, keyid.String()); err != nil {
-			log.Error().Err(err).Str("kid", keyid.String()).Msg("could not set tokens public key id")
+			sentry.Error(c).Err(err).Str("kid", keyid.String()).Msg("could not set tokens public key id")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse("an internal error occurred"))
 			return
 		}
 
 		if err = key.Set(jwk.KeyUsageKey, jwk.ForSignature); err != nil {
-			log.Error().Err(err).Str("kid", keyid.String()).Msg("could not set tokens public key use")
+			sentry.Error(c).Err(err).Str("kid", keyid.String()).Msg("could not set tokens public key use")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse("an internal error occurred"))
 			return
 		}
 
 		// NOTE: the algorithm should match the signing method in tokens.go
 		if err = key.Set(jwk.AlgorithmKey, jwa.RS256); err != nil {
-			log.Error().Err(err).Str("kid", keyid.String()).Msg("could not set tokens public key algorithm")
+			sentry.Error(c).Err(err).Str("kid", keyid.String()).Msg("could not set tokens public key algorithm")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse("an internal error occurred"))
 			return
 		}
 
 		if err = jwks.AddKey(key); err != nil {
-			log.Error().Err(err).Str("kid", keyid.String()).Msg("could not add key to jwks")
+			sentry.Error(c).Err(err).Str("kid", keyid.String()).Msg("could not add key to jwks")
 			c.JSON(http.StatusInternalServerError, api.ErrorResponse("an internal error occurred"))
 			return
 		}

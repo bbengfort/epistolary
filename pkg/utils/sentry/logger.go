@@ -55,8 +55,9 @@ func CreateEvent(level sentry.Level, ctx interface{}) *Event {
 	// Attempt to fetch the hub from the context
 	switch c := ctx.(type) {
 	case *gin.Context:
-		event.hub = sentrygin.GetHubFromContext(c)
 		event.ginc = c
+		event.hub = sentrygin.GetHubFromContext(c)
+		event.zero = event.zero.Str("request_id", c.GetString("request_id"))
 	case context.Context:
 		event.hub = sentry.GetHubFromContext(c)
 	case *sentry.Hub:
@@ -121,6 +122,12 @@ func (e *Event) Err(err error) *Event {
 func (e *Event) Str(key, value string) *Event {
 	e.extra[key] = value
 	e.zero = e.zero.Str(key, value)
+	return e
+}
+
+func (e *Event) Strs(key string, value []string) *Event {
+	e.extra[key] = value
+	e.zero = e.zero.Strs(key, value)
 	return e
 }
 
