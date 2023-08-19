@@ -67,6 +67,13 @@ func New(conf config.Config) (s *Server, err error) {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	}
 
+	// Configure sentry for error and performance monitoring
+	if conf.Sentry.UseSentry() {
+		if err = sentry.Init(conf.Sentry); err != nil {
+			return nil, err
+		}
+	}
+
 	// Create the server and prepare to serve
 	s = &Server{
 		conf: conf,
@@ -193,6 +200,11 @@ func (s *Server) Shutdown() (err error) {
 		if serr := db.Close(); serr != nil {
 			err = multierror.Append(err, serr)
 		}
+	}
+
+	// Flush sentry errors
+	if s.conf.Sentry.UseSentry() {
+		sentry.Flush(2 * time.Second)
 	}
 
 	if err == nil {

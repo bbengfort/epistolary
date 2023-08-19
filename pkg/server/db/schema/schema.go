@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bbengfort/epistolary/pkg/utils/sentry"
 	migrate "github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/source"
 	bindata "github.com/golang-migrate/migrate/v4/source/go_bindata"
@@ -191,7 +192,7 @@ func Wait(ctx context.Context, dsn ...string) (err error) {
 
 		// Log every minute rather than every 5 seconds
 		if iters%12 == 0 {
-			log.Warn().Err(err).Msg("waiting for correct schema version")
+			sentry.Warn(ctx).Err(err).Msg("waiting for correct schema version")
 		} else {
 			log.Trace().Err(err).Msg("waiting for correct schema version")
 		}
