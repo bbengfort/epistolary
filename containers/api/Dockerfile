@@ -1,6 +1,6 @@
 # Dynamic Builds
-ARG BUILDER_IMAGE=golang:1.21-buster
-ARG FINAL_IMAGE=debian:buster-slim
+ARG BUILDER_IMAGE=golang:1.21-bullseye
+ARG FINAL_IMAGE=debian:bullseye-slim
 
 # Build stage
 FROM --platform=${BUILDPLATFORM} ${BUILDER_IMAGE} AS builder
