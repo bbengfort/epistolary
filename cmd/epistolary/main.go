@@ -13,6 +13,7 @@ import (
 	"os"
 	"strings"
 	"syscall"
+	"text/tabwriter"
 	"time"
 
 	"golang.org/x/term"
@@ -25,6 +26,7 @@ import (
 	"github.com/bbengfort/epistolary/pkg/server/fetch"
 	"github.com/joho/godotenv"
 	ulid "github.com/oklog/ulid/v2"
+	confire "github.com/rotationalio/confire/usage"
 	"github.com/urfave/cli/v2"
 )
 
@@ -106,6 +108,19 @@ func main() {
 						Name:    "verify",
 						Aliases: []string{"v"},
 						Usage:   "verify the schema has been correctly loaded",
+					},
+				},
+			},
+			{
+				Name:     "config",
+				Usage:    "print epistolary configuration guide",
+				Category: "admin",
+				Action:   usage,
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:    "list",
+						Aliases: []string{"l"},
+						Usage:   "print in list mode instead of table mode",
 					},
 				},
 			},
@@ -233,6 +248,21 @@ func schemaVersion(c *cli.Context) (err error) {
 //===========================================================================
 // Admin Actions
 //===========================================================================
+
+func usage(c *cli.Context) (err error) {
+	tabs := tabwriter.NewWriter(os.Stdout, 1, 0, 4, ' ', 0)
+	format := confire.DefaultTableFormat
+	if c.Bool("list") {
+		format = confire.DefaultListFormat
+	}
+
+	var conf config.Config
+	if err := confire.Usagef("epistolary", &conf, tabs, format); err != nil {
+		return cli.Exit(err, 1)
+	}
+	tabs.Flush()
+	return nil
+}
 
 func generateTokenKey(c *cli.Context) (err error) {
 	// Create ksuid and determine outpath
