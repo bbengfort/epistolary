@@ -1,6 +1,6 @@
 import { React, useEffect, useState } from 'react';
 import Container from 'react-bootstrap/Container';
-import API from '../api';
+import { status } from '../api';
 import config from '../config';
 
 const Footer = () => {
@@ -8,22 +8,8 @@ const Footer = () => {
 
   useEffect(() => {
     const fetchStatus = async () => {
-      try {
-        const response = await API.get('status');
-        setAPIStatus(response.data)
-      } catch (error) {
-        if (error.response) {
-          // Handle maintenance mode
-          if (error.response.status === 503) {
-            setAPIStatus(error.response.data);
-            return
-          }
-          console.error("received api error", error.response.status, error.response.data);
-        } else {
-          console.error("could not connect to status endpoint", error.message);
-        }
-        setAPIStatus({'status': 'offline', 'uptime': '', 'version': ''});
-      }
+        const response = await status();
+        setAPIStatus(response);
     }
     fetchStatus();
   }, []);
