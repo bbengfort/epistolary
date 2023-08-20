@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
@@ -10,7 +11,11 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
+	"syscall"
 	"time"
+
+	"golang.org/x/term"
 
 	"github.com/bbengfort/epistolary/pkg"
 	"github.com/bbengfort/epistolary/pkg/api/v1"
@@ -128,6 +133,13 @@ func main() {
 				Usage:    "send a status request to the epistolary api",
 				Category: "client",
 				Action:   status,
+				Flags:    []cli.Flag{},
+			},
+			{
+				Name:     "register",
+				Usage:    "register a new user with the epistolary api",
+				Category: "client",
+				Action:   register,
 				Flags:    []cli.Flag{},
 			},
 			{
@@ -278,6 +290,28 @@ func status(c *cli.Context) (err error) {
 	return nil
 }
 
+func register(c *cli.Context) (err error) {
+	registration := &api.RegisterRequest{
+		FullName: Prompt("Full Name:"),
+		Email:    Prompt("Email:"),
+		Username: Prompt("Username:"),
+		Password: PasswordPrompt("Password:"),
+	}
+
+	var client api.EpistolaryClient
+	if client, err = api.New(c.String("url")); err != nil {
+		return cli.Exit(err, 1)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err = client.Register(ctx, registration); err != nil {
+		return cli.Exit(err, 1)
+	}
+	return nil
+}
+
 //===========================================================================
 // Debug Actions
 //===========================================================================
@@ -314,4 +348,35 @@ func fetchURL(c *cli.Context) (err error) {
 		return cli.Exit(err, 1)
 	}
 	return nil
+}
+
+//===========================================================================
+// CLI Helpers
+//===========================================================================
+
+func Prompt(label string) string {
+	var s string
+	r := bufio.NewReader(os.Stdin)
+	for {
+		fmt.Fprint(os.Stderr, label+" ")
+		s, _ = r.ReadString('\n')
+		if s != "" {
+			break
+		}
+	}
+	return strings.TrimSpace(s)
+}
+
+func PasswordPrompt(label string) string {
+	var s string
+	for {
+		fmt.Fprint(os.Stderr, label+" ")
+		b, _ := term.ReadPassword(int(syscall.Stdin))
+		s = string(b)
+		if s != "" {
+			break
+		}
+	}
+	fmt.Println()
+	return s
 }

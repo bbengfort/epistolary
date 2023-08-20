@@ -23,6 +23,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/urfave/cli/v2 v2.25.7
 	golang.org/x/crypto v0.12.0
+	golang.org/x/term v0.11.0
 )
 
 require (
