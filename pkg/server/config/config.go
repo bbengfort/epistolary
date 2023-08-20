@@ -31,9 +31,10 @@ type DatabaseConfig struct {
 }
 
 type TokenConfig struct {
-	Keys     map[string]string `required:"false"`
-	Audience string            `default:"https://epistolary.app"`
-	Issuer   string            `default:"https://api.epistolary.app"`
+	Keys         map[string]string `required:"false"`
+	Audience     string            `default:"https://epistolary.app"`
+	Issuer       string            `default:"https://api.epistolary.app"`
+	CookieDomain string            `split_words:"true" default:"epistolary.app"`
 }
 
 // New creates a new Config object from environment variables prefixed with EPISTOLARY.

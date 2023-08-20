@@ -23,6 +23,7 @@ var testEnv = map[string]string{
 	"EPISTOLARY_TOKEN_KEYS":               "01GECSDK5WJ7XWASQ0PMH6K41K:testdata/01GECSDK5WJ7XWASQ0PMH6K41K.pem,01GECSJGDCDN368D0EENX23C7R:testdata/01GECSJGDCDN368D0EENX23C7R.pem",
 	"EPISTOLARY_TOKEN_AUDIENCE":           "http://localhost:3000",
 	"EPISTOLARY_TOKEN_ISSUER":             "http://localhost:8000",
+	"EPISTOLARY_TOKEN_COOKIE_DOMAIN":      "localhost",
 	"EPISTOLARY_SENTRY_DSN":               "http://testing.sentry.test/1234",
 	"EPISTOLARY_SENTRY_SERVER_NAME":       "tnode",
 	"EPISTOLARY_SENTRY_ENVIRONMENT":       "testing",
@@ -62,6 +63,7 @@ func TestConfig(t *testing.T) {
 	require.Len(t, conf.Token.Keys, 2)
 	require.Equal(t, testEnv["EPISTOLARY_TOKEN_AUDIENCE"], conf.Token.Audience)
 	require.Equal(t, testEnv["EPISTOLARY_TOKEN_ISSUER"], conf.Token.Issuer)
+	require.Equal(t, testEnv["EPISTOLARY_TOKEN_COOKIE_DOMAIN"], conf.Token.CookieDomain)
 	require.Equal(t, testEnv["EPISTOLARY_SENTRY_DSN"], conf.Sentry.DSN)
 	require.Equal(t, testEnv["EPISTOLARY_SENTRY_SERVER_NAME"], conf.Sentry.ServerName)
 	require.Equal(t, testEnv["EPISTOLARY_SENTRY_ENVIRONMENT"], conf.Sentry.Environment)
