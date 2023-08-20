@@ -4,7 +4,8 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
-	"strings"
+	"regexp"
+	"time"
 
 	"github.com/bbengfort/epistolary/pkg/api/v1"
 	"github.com/bbengfort/epistolary/pkg/server/passwd"
@@ -119,20 +120,32 @@ func (s *Server) Login(c *gin.Context) {
 		return
 	}
 
+	// Set the access and refresh tokens as cookies for the front-end
+	if err := SetAuthCookies(c, out.AccessToken, out.RefreshToken, s.conf.Token.CookieDomain); err != nil {
+		sentry.Error(c).Err(err).Msg("could not set access and refresh token cookies")
+		c.JSON(http.StatusUnauthorized, api.ErrorResponse("authentication failed"))
+		return
+	}
+
 	// Update the last_seen timestamp for the user
 	if err = user.UpdateLastSeen(c.Request.Context()); err != nil {
 		sentry.Error(c).Err(err).Msg("could not update user last seen")
 		c.JSON(http.StatusUnauthorized, api.ErrorResponse("authentication failed"))
 		return
 	}
-
 	c.JSON(http.StatusOK, out)
 }
 
 const (
-	bearer        = "Bearer "
-	authorization = "Authorization"
-	UserClaims    = "user_claims"
+	authorization      = "Authorization"
+	UserClaims         = "user_claims"
+	AccessTokenCookie  = "access_token"
+	RefreshTokenCookie = "refresh_token"
+)
+
+// used to extract the access token from the header
+var (
+	bearer = regexp.MustCompile(`^\s*[Bb]earer\s+([a-zA-Z0-9_\-\.]+)\s*$`)
 )
 
 func (s *Server) Authenticate(c *gin.Context) {
@@ -199,14 +212,23 @@ func (s *Server) Authorize(permissions ...string) gin.HandlerFunc {
 }
 
 func GetAccessToken(c *gin.Context) (tks string, err error) {
-	header := c.GetHeader(authorization)
-	if header != "" {
-		parts := strings.Split(header, bearer)
-		if len(parts) == 2 {
-			return strings.TrimSpace(parts[1]), nil
+	// Attempt to get the access token from the header
+	if header := c.GetHeader(authorization); header != "" {
+		match := bearer.FindStringSubmatch(header)
+		if len(match) == 2 {
+			return match[1], nil
 		}
 		return "", errors.New("could not parse Bearer token from Authorization header")
 	}
+
+	// Attempt to get the access token from cookies
+	var cookie string
+	if cookie, err = c.Cookie(AccessTokenCookie); err == nil {
+		// If the error is nil, we were able to retrieve the access token cookie
+		return cookie, nil
+	}
+
+	// Could not find the access token in the request
 	return "", errors.New("no access token found in request")
 }
 
@@ -230,4 +252,31 @@ func GetUserID(c *gin.Context) (int64, error) {
 		return 0, err
 	}
 	return claims.SubjectID()
+}
+
+// SetAuthCookies is a helper function that sets access and refresh token cookies on a
+// gin request. The access token cookie (access_token) is an http only cookie that
+// expires when the access token expires. The refresh token cookie is an http only
+// cookie (it can't be accessed by client-side scripts) and it expires when the refresh
+// token expires. Both cookies require https and will not be set (silently) over http.
+func SetAuthCookies(c *gin.Context, accessToken, refreshToken, domain string) (err error) {
+	var accessExpires time.Time
+	if accessExpires, err = tokens.ExpiresAt(accessToken); err != nil {
+		return err
+	}
+
+	// Set the access token cookie: httpOnly is true; cannot be accessed by javascript
+	accessMaxAge := int((time.Until(accessExpires)).Seconds())
+	c.SetCookie(AccessTokenCookie, accessToken, accessMaxAge, "/", domain, true, true)
+
+	var refreshExpires time.Time
+	if refreshExpires, err = tokens.ExpiresAt(refreshToken); err != nil {
+		return err
+	}
+
+	// Set the refresh token cookie; httpOnly is true; cannot be accessed by javascript
+	refreshMaxAge := int((time.Until(refreshExpires)).Seconds())
+	c.SetCookie(RefreshTokenCookie, refreshToken, refreshMaxAge, "/", domain, true, true)
+
+	return nil
 }
