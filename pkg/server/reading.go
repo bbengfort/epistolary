@@ -54,11 +54,11 @@ func (s *Server) ListReadings(c *gin.Context) {
 			Title:       epistle.Title.String,
 			Description: epistle.Description.String,
 			Favicon:     epistle.Favicon.String,
-			Started:     r.Started.Time,
-			Finished:    r.Finished.Time,
-			Archived:    r.Archived.Time,
-			Created:     r.Created,
-			Modified:    r.Modified,
+			Started:     api.Timestamp{Time: r.Started.Time},
+			Finished:    api.Timestamp{Time: r.Finished.Time},
+			Archived:    api.Timestamp{Time: r.Archived.Time},
+			Created:     api.Timestamp{Time: r.Created},
+			Modified:    api.Timestamp{Time: r.Modified},
 		}
 
 		out.Readings = append(out.Readings, item)
@@ -116,11 +116,11 @@ func (s *Server) CreateReading(c *gin.Context) {
 	reading.Title = epistle.Title.String
 	reading.Description = epistle.Description.String
 	reading.Favicon = epistle.Favicon.String
-	reading.Started = read.Started.Time
-	reading.Finished = read.Finished.Time
-	reading.Archived = read.Archived.Time
-	reading.Created = read.Created
-	reading.Modified = read.Modified
+	reading.Started = api.Timestamp{Time: read.Started.Time}
+	reading.Finished = api.Timestamp{Time: read.Finished.Time}
+	reading.Archived = api.Timestamp{Time: read.Archived.Time}
+	reading.Created = api.Timestamp{Time: read.Created}
+	reading.Modified = api.Timestamp{Time: read.Modified}
 
 	c.JSON(http.StatusCreated, reading)
 }
@@ -161,11 +161,11 @@ func (s *Server) FetchReading(c *gin.Context) {
 	reading.Title = epistle.Title.String
 	reading.Description = epistle.Description.String
 	reading.Favicon = epistle.Favicon.String
-	reading.Started = item.Started.Time
-	reading.Finished = item.Finished.Time
-	reading.Archived = item.Archived.Time
-	reading.Created = item.Created
-	reading.Modified = item.Modified
+	reading.Started = api.Timestamp{Time: item.Started.Time}
+	reading.Finished = api.Timestamp{Time: item.Finished.Time}
+	reading.Archived = api.Timestamp{Time: item.Archived.Time}
+	reading.Created = api.Timestamp{Time: item.Created}
+	reading.Modified = api.Timestamp{Time: item.Modified}
 
 	c.JSON(http.StatusOK, reading)
 }

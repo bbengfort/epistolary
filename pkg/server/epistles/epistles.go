@@ -53,7 +53,7 @@ func (e *Epistle) Sync(ctx context.Context) (err error) {
 }
 
 const (
-	saveEpistleSQL = "UPDATE epistles SET link=$2, title=%3, description=$4, favicon=$5, created=$6, modified=$7 WHERE id=$1"
+	saveEpistleSQL = "UPDATE epistles SET link=$2, title=$3, description=$4, favicon=$5, created=$6, modified=$7 WHERE id=$1"
 )
 
 func (e *Epistle) Save(ctx context.Context) (err error) {

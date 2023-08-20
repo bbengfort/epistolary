@@ -6,12 +6,74 @@ const API =  axios.create({
   headers: {
     'Content-Type': 'application/json'
   },
+  withCredentials: true,
 })
 
 export const login = async (username, password) => {
-  const req = {username, password};
-  let response = await API.post('login', req);
-  return response.data
+  try {
+    const req = {username, password};
+    const response = await API.post('login', req);
+    return response.data
+  } catch (error) {
+    if (error.response) {
+      let data = error.response.data;
+      data.statusCode = error.response.status;
+      console.error("received api error", error.response.status, error.response.data);
+      return data;
+    }
+    console.error("could not connect to the login endpoint", error.message);
+    return {success: false, error: error.message, statusCode: null};
+  }
+}
+
+export const logout = async () => {
+  try {
+    const response = await API.post('logout');
+    return response.status === 204;
+  } catch (error) {
+    if (error.response) {
+      console.error("received api error", error.response.status, error.response.data);
+    } else {
+      console.error("could not connect to logout endpoint", error.message);
+    }
+    return false;
+  }
+}
+
+export const listReadings = async () => {
+  try {
+    const response = await API.get('reading');
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      let data = error.response.data;
+      data.statusCode = error.response.status;
+
+      console.error("received api error", error.response.status, error.response.data);
+      return data;
+    }
+    console.error("could not connect to list readings endpoint", error.message);
+    return {success: false, error: error.message, statusCode: null};
+  }
+}
+
+export const createReading = async(link) => {
+  try {
+    const req = {link};
+    const response = await API.post('reading', req);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      let data = error.response.data;
+      data.statusCode = error.response.status;
+
+      console.error("received api error", error.response.status, error.response.data);
+      return data;
+    }
+
+    console.error("could not connect to create readings endpoint", error.message);
+    return {success: false, error: error.message, statusCode: null};
+  }
 }
 
 export const status = async () => {
