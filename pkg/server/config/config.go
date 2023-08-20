@@ -7,14 +7,15 @@ import (
 	"github.com/bbengfort/epistolary/pkg/utils/logger"
 	"github.com/bbengfort/epistolary/pkg/utils/sentry"
 	"github.com/gin-gonic/gin"
-	"github.com/kelseyhightower/envconfig"
+	"github.com/rotationalio/confire"
+	"github.com/rotationalio/confire/validate"
 	"github.com/rs/zerolog"
 )
 
 type Config struct {
 	Maintenance  bool                `split_words:"true" default:"false"`
 	BindAddr     string              `split_words:"true" default:":8000"`
-	Mode         string              `split_words:"true" default:"release"`
+	Mode         GinMode             `split_words:"true" default:"release"`
 	LogLevel     logger.LevelDecoder `split_words:"true" default:"info"`
 	ConsoleLog   bool                `split_words:"true" default:"false"`
 	AllowOrigins []string            `split_words:"true" default:"https://epistolary.app"`
@@ -25,13 +26,13 @@ type Config struct {
 }
 
 type DatabaseConfig struct {
-	URL      string `split_words:"true" required:"true"`
+	URL      string `required:"true" split_words:"true"`
 	ReadOnly bool   `split_words:"true" default:"false"`
 	Testing  bool   `split_words:"true" default:"false"`
 }
 
 type TokenConfig struct {
-	Keys         map[string]string `required:"false"`
+	Keys         map[string]string `desc:"a map of key ID to key path"`
 	Audience     string            `default:"https://epistolary.app"`
 	Issuer       string            `default:"https://api.epistolary.app"`
 	CookieDomain string            `split_words:"true" default:"epistolary.app"`
@@ -39,18 +40,13 @@ type TokenConfig struct {
 
 // New creates a new Config object from environment variables prefixed with EPISTOLARY.
 func New() (conf Config, err error) {
-	if err = envconfig.Process("epistolary", &conf); err != nil {
-		return Config{}, err
+	if err = confire.Process("epistolary", &conf); err != nil {
+		return conf, err
 	}
 
 	// Ensure the Sentry release is named correctly
 	if conf.Sentry.Release == "" {
 		conf.Sentry.Release = fmt.Sprintf("epistolary@%s", pkg.Version())
-	}
-
-	// Validate the configuration
-	if err = conf.Validate(); err != nil {
-		return Config{}, err
 	}
 
 	conf.processed = true
@@ -67,22 +63,18 @@ func (c Config) IsZero() bool {
 
 // Mark a manually constructed as processed as long as it is validated.
 func (c Config) Mark() (Config, error) {
-	if err := c.Validate(); err != nil {
+	if err := validate.Validate(&c); err != nil {
 		return c, err
 	}
 	c.processed = true
 	return c, nil
 }
 
-// Validate the config to make sure that it is usable to run the Epistolary server.
-func (c Config) Validate() (err error) {
-	if c.Mode != gin.ReleaseMode && c.Mode != gin.DebugMode && c.Mode != gin.TestMode {
-		return fmt.Errorf("%q is not a valid gin mode", c.Mode)
-	}
+type GinMode string
 
-	if err = c.Sentry.Validate(); err != nil {
-		return err
+func (s GinMode) Validate() error {
+	if s != gin.ReleaseMode && s != gin.DebugMode && s != gin.TestMode {
+		return fmt.Errorf("%q is not a valid gin mode", s)
 	}
-
 	return nil
 }

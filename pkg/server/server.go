@@ -94,7 +94,7 @@ func New(conf config.Config) (s *Server, err error) {
 	}
 
 	// Create the router
-	gin.SetMode(conf.Mode)
+	gin.SetMode(string(conf.Mode))
 	s.router = gin.New()
 	if err = s.setupRoutes(); err != nil {
 		return nil, err
