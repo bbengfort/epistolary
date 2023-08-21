@@ -12,6 +12,7 @@ import (
 type EpistolaryClient interface {
 	Register(context.Context, *RegisterRequest) error
 	Login(context.Context, *LoginRequest) (*LoginReply, error)
+	Logout(context.Context) error
 	Status(context.Context) (*StatusReply, error)
 
 	ListReadings(context.Context, *PageQuery) (*ReadingPage, error)
@@ -78,11 +79,11 @@ type Reading struct {
 	Title       string    `json:"title,omitempty"`
 	Description string    `json:"description,omitempty"`
 	Favicon     string    `json:"favicon,omitempty"`
-	Started     time.Time `json:"started,omitempty"`
-	Finished    time.Time `json:"finished,omitempty"`
-	Archived    time.Time `json:"archived,omitempty"`
-	Created     time.Time `json:"created,omitempty"`
-	Modified    time.Time `json:"modified,omitempty"`
+	Started     Timestamp `json:"started,omitempty"`
+	Finished    Timestamp `json:"finished,omitempty"`
+	Archived    Timestamp `json:"archived,omitempty"`
+	Created     Timestamp `json:"created,omitempty"`
+	Modified    Timestamp `json:"modified,omitempty"`
 }
 
 //===========================================================================
@@ -108,4 +109,15 @@ type OpenIDConfiguration struct {
 	TokenEndpointAuthMethods      []string `json:"token_endpoint_auth_methods_supported"`
 	ClaimsSupported               []string `json:"claims_supported"`
 	RequestURIParameterSupported  bool     `json:"request_uri_parameter_supported"`
+}
+
+type Timestamp struct {
+	time.Time
+}
+
+func (t Timestamp) MarshalJSON() ([]byte, error) {
+	if t.IsZero() {
+		return []byte("null"), nil
+	}
+	return t.Time.MarshalJSON()
 }

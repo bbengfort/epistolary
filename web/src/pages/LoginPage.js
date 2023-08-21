@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import Alert from 'react-bootstrap/Alert';
+import { useNavigate } from "react-router-dom";
 
 import  { useForm }  from  "react-hook-form";
 import { useBodyClass } from '../hooks';
@@ -12,6 +13,7 @@ import './LoginPage.css';
 
 function LoginPage() {
   useBodyClass(["bg-body-tertiary"])
+  const navigate = useNavigate();
   const { register, handleSubmit, formState:{errors} } = useForm();
   const [ alerts, setAlerts ] = useState([]);
 
@@ -22,21 +24,19 @@ function LoginPage() {
       return
     }
 
-    try {
-      let response = await login(data.username, data.password);
-      console.log(response);
-    } catch(error) {
-      if (error.response) {
-        alerts.push(error.response.data.error);
-      } else {
-        alerts.push(error.message);
-      }
+    let response = await login(data.username, data.password);
+    console.log(response);
+    if (response.error) {
+      alerts.push(response.error);
+      setAlerts(alerts);
+    } else {
+      navigate("/");
     }
   }
 
   const removeAlert = (i) => {
-    alerts.splice(i, 1)
-    setAlerts(alerts)
+    alerts.splice(i, 1);
+    setAlerts(alerts);
   }
 
   const renderAlerts = () => {

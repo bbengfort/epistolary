@@ -136,6 +136,13 @@ func (s *Server) Login(c *gin.Context) {
 	c.JSON(http.StatusOK, out)
 }
 
+func (s *Server) Logout(c *gin.Context) {
+	// Clear cookies but setting the access and refresh tokens to having expired.
+	c.SetCookie(AccessTokenCookie, "", -1, "/", s.conf.Token.CookieDomain, true, true)
+	c.SetCookie(RefreshTokenCookie, "", -1, "/", s.conf.Token.CookieDomain, true, true)
+	c.Status(http.StatusNoContent)
+}
+
 const (
 	authorization      = "Authorization"
 	UserClaims         = "user_claims"

@@ -79,6 +79,21 @@ func (s *APIv1) Login(ctx context.Context, in *LoginRequest) (out *LoginReply, e
 	return out, nil
 }
 
+func (s *APIv1) Logout(ctx context.Context) (err error) {
+	//  Make the HTTP request
+	var req *http.Request
+	if req, err = s.NewRequest(ctx, http.MethodPost, "/v1/logout", nil, nil); err != nil {
+		return err
+	}
+
+	if _, err = s.Do(req, nil, true); err != nil {
+		return err
+	}
+
+	// TODO: delete any locally stored credentials.
+	return nil
+}
+
 func (s *APIv1) ListReadings(ctx context.Context, in *PageQuery) (out *ReadingPage, err error) {
 	var params url.Values
 	if params, err = query.Values(in); err != nil {

@@ -296,12 +296,13 @@ func (s *Server) setupRoutes() (err error) {
 
 		// Login route (no authentication required)
 		v1.POST("/login", s.Login)
+		v1.POST("/logout", s.Logout)
 
 		// Reading REST Resource (requires authentication)
 		r := v1.Group("/reading", s.Authenticate)
 		{
-			r.GET("/", s.Authorize("epistles:read"), s.ListReadings)
-			r.POST("/", s.Authorize("epistles:update"), s.CreateReading)
+			r.GET("", s.Authorize("epistles:read"), s.ListReadings)
+			r.POST("", s.Authorize("epistles:update"), s.CreateReading)
 			r.GET("/:readingID", s.Authorize("epistles:read"), s.FetchReading)
 			r.PUT("/:readingID", s.Authorize("epistles:update"), s.UpdateReading)
 			r.DELETE("/:readingID", s.Authorize("epistles:delete"), s.DeleteReading)
