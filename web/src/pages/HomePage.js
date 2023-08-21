@@ -71,6 +71,17 @@ function HomePage() {
     });
   }
 
+  const renderReadings = () => {
+    return readings.map(reading => {
+      return (
+        <li key={reading.id}>
+          <img src={reading.favicon} width="16" height="16" alt="favicon" />
+          <a className="mx-2" href={reading.link} target="_blank" rel="noreferrer">{reading.title || "unknown title"}</a>
+        </li>
+      );
+    });
+  }
+
   return (
     <>
     <main className='flex-shrink-0'>
@@ -91,6 +102,11 @@ function HomePage() {
             </Button>
           </InputGroup>
         </Form>
+      </Container>
+      <Container>
+        <ul className='list-unstyled'>
+          { renderReadings() }
+        </ul>
       </Container>
     </main>
     <Footer />
