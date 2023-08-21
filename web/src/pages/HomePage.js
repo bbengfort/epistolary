@@ -10,6 +10,7 @@ import ToastContainer from 'react-bootstrap/ToastContainer';
 import  { useForm }  from  "react-hook-form";
 import { listReadings, createReading } from '../api';
 import { ToastHeader } from 'react-bootstrap';
+import readingIcon from '../images/reading.png';
 
 function HomePage() {
   const { register, handleSubmit, formState:{errors} } = useForm();
@@ -59,7 +60,7 @@ function HomePage() {
   const renderAlerts = () => {
     return alerts.map((msg, i) => {
       return (
-        <Toast autohide delay={3000} bg={'danger'} key={i} onClose={() => removeAlert(i)}>
+        <Toast autohide animation delay={3000} bg={'danger'} key={i} onClose={() => removeAlert(i)}>
           <ToastHeader>
             <strong className="me-auto">An Error Occurred</strong>
           </ToastHeader>
@@ -75,7 +76,7 @@ function HomePage() {
     return readings.map(reading => {
       return (
         <li key={reading.id}>
-          <img src={reading.favicon} width="16" height="16" alt="favicon" />
+          <img src={reading.favicon || readingIcon} width="16" height="16" alt="favicon" />
           <a className="mx-2" href={reading.link} target="_blank" rel="noreferrer">{reading.title || "unknown title"}</a>
         </li>
       );
