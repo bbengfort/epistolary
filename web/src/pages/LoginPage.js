@@ -35,8 +35,8 @@ function LoginPage() {
   }
 
   const removeAlert = (i) => {
-    alerts.splice(i, 1)
-    setAlerts(alerts)
+    alerts.splice(i, 1);
+    setAlerts(alerts);
   }
 
   const renderAlerts = () => {
