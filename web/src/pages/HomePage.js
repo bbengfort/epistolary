@@ -4,12 +4,11 @@ import Footer from '../components/Footer';
 import Form from 'react-bootstrap/Form';
 import InputGroup from 'react-bootstrap/InputGroup';
 import Button from 'react-bootstrap/Button';
-import Toast from 'react-bootstrap/Toast';
-import ToastContainer from 'react-bootstrap/ToastContainer';
+import Toasts from '../components/Toasts';
+
 
 import  { useForm }  from  "react-hook-form";
 import { listReadings, createReading } from '../api';
-import { ToastHeader } from 'react-bootstrap';
 import readingIcon from '../images/reading.png';
 
 function HomePage() {
@@ -21,9 +20,7 @@ function HomePage() {
     const fetchReadings = async () => {
       const response = await listReadings();
       if (response.error) {
-        setAlerts(alerts => {
-          return [...alerts, response.error];
-        });
+        addAlert(response.error);
       } else {
         setReadings(response.readings);
       }
@@ -33,17 +30,13 @@ function HomePage() {
 
   const onSubmit = async (data) => {
     if (errors.link) {
-      setAlerts(alerts => {
-        return [...alerts, errors.link];
-      });
+      addAlert(errors.link);
       return
     }
 
     let response = await createReading(data.link);
     if (response.error) {
-      setAlerts(alerts => {
-        return [...alerts, response.error];
-      });
+      addAlert(response.error);
     } else {
       setReadings(readings => {
         return [...readings, response];
@@ -51,24 +44,10 @@ function HomePage() {
     }
   };
 
-  const removeAlert = (idx) => {
+  const addAlert = (msg) => {
+    const alert = {msg: msg, id: alerts.length+1, bg: 'danger'};
     setAlerts(alerts => {
-      return alerts.splice(idx, 1);
-    });
-  }
-
-  const renderAlerts = () => {
-    return alerts.map((msg, i) => {
-      return (
-        <Toast autohide animation delay={3000} bg={'danger'} key={i} onClose={() => removeAlert(i)}>
-          <ToastHeader>
-            <strong className="me-auto">An Error Occurred</strong>
-          </ToastHeader>
-          <Toast.Body>
-            { msg }
-          </Toast.Body>
-        </Toast>
-      );
+      return [...alerts, alert];
     });
   }
 
@@ -86,9 +65,7 @@ function HomePage() {
   return (
     <>
     <main className='flex-shrink-0'>
-      <ToastContainer position='top-end' className="mt-2 mx-2">
-        { renderAlerts() }
-      </ToastContainer>
+      <Toasts alerts={alerts} setAlerts={setAlerts} />
       <Container className="my-4">
         <Form onSubmit={handleSubmit(onSubmit)}>
           <InputGroup>
