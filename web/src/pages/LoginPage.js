@@ -4,8 +4,10 @@ import Button from 'react-bootstrap/Button';
 import Alerts from '../components/Alerts';
 import { useNavigate } from "react-router-dom";
 
+import jwt from 'jwt-decode';
 import  { useForm }  from  "react-hook-form";
-import { useBodyClass } from '../hooks';
+import useBodyClass from '../hooks/body';
+import useAuth from '../hooks/auth';
 
 import { login } from '../api';
 import logo from '../images/logo.png';
@@ -16,6 +18,7 @@ function LoginPage() {
   const navigate = useNavigate();
   const { register, handleSubmit, formState:{errors} } = useForm();
   const [ alerts, setAlerts ] = useState([]);
+  const [ , setAuth ] = useAuth();
 
   const onSubmit = async (data) => {
     if (errors.username || errors.password) {
@@ -24,11 +27,17 @@ function LoginPage() {
     }
 
     let response = await login(data.username, data.password);
-    console.log(response);
     if (response.error) {
       addAlert(response.error);
     } else {
-      navigate("/");
+      // Parse the JWT token
+      if (response.access_token) {
+        const user = jwt(response.access_token);
+        setAuth(user);
+        navigate("/");
+      } else {
+        addAlert("could not parse login response")
+      }
     }
   }
 

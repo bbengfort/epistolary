@@ -6,7 +6,6 @@ import InputGroup from 'react-bootstrap/InputGroup';
 import Button from 'react-bootstrap/Button';
 import Toasts from '../components/Toasts';
 
-
 import  { useForm }  from  "react-hook-form";
 import { listReadings, createReading } from '../api';
 import readingIcon from '../images/reading.png';
@@ -45,8 +44,8 @@ function HomePage() {
   };
 
   const addAlert = (msg) => {
-    const alert = {msg: msg, id: alerts.length+1, bg: 'danger'};
     setAlerts(alerts => {
+      const alert = {msg: msg, id: alerts.length+1, bg: 'danger'};
       return [...alerts, alert];
     });
   }
@@ -64,9 +63,9 @@ function HomePage() {
 
   return (
     <>
-    <main className='flex-shrink-0'>
+    <main className='flex-shrink-0' style={{paddingBottom: "96px"}}>
       <Toasts alerts={alerts} setAlerts={setAlerts} />
-      <Container className="my-4">
+      <Container className="mt-4">
         <Form onSubmit={handleSubmit(onSubmit)}>
           <InputGroup>
             <Form.Control
@@ -81,7 +80,7 @@ function HomePage() {
           </InputGroup>
         </Form>
       </Container>
-      <Container>
+      <Container className="py-4">
         <ul className='list-unstyled'>
           { renderReadings() }
         </ul>
