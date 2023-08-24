@@ -14,19 +14,25 @@ import readingIcon from '../images/reading.png';
 function HomePage() {
   const { register, handleSubmit, formState:{errors} } = useForm();
   const [ readings, setReadings ] = useState([]);
+  const [ page, setPage ] = useState("");
+  const [ pagination, setPagination ] = useState({prevPageToken: "", nextPageToken: ""});
   const [ alerts, setAlerts ] = useState([]);
 
   useEffect(() => {
     const fetchReadings = async () => {
-      const response = await listReadings();
+      const response = await listReadings(page);
       if (response.error) {
         addAlert(response.error);
       } else {
         setReadings(response.readings);
+        setPagination({
+          prevPageToken: response.prev_page_token,
+          nextPageToken: response.next_page_token,
+        });
       }
     }
     fetchReadings();
-  }, []);
+  }, [page]);
 
   const onSubmit = async (data) => {
     if (errors.link) {
@@ -55,7 +61,7 @@ function HomePage() {
     return readings.map(reading => {
       return (
         <li key={reading.id}>
-          <img src={reading.favicon || readingIcon} width="16" height="16" alt="favicon" />
+          <img src={reading.favicon || readingIcon} width="16" height="16" alt="favicon" />{' '}
           <a className="mx-2" href={reading.link} target="_blank" rel="noreferrer">{reading.title || "unknown title"}</a>
         </li>
       );
@@ -86,6 +92,10 @@ function HomePage() {
         <ul className='list-unstyled'>
           { renderReadings() }
         </ul>
+        <div className="d-grid gap-2 d-flex justify-content-around mt-5">
+          <Button className='btn btn-primary' type="button" disabled={!pagination.prevPageToken} onClick={() => setPage(pagination.prevPageToken)}>&laquo; Prev</Button>
+          <Button className='btn btn-primary' type="button" disabled={!pagination.nextPageToken} onClick={() => setPage(pagination.nextPageToken)}>Next &raquo;</Button>
+        </div>
       </Container>
     </main>
     <Footer />

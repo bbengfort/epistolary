@@ -55,7 +55,7 @@ func Parse(token string) (cursor *Cursor, err error) {
 }
 
 func (c Cursor) PrevPage() *Cursor {
-	return New(max(int64(0), c.Start-int64(c.Size)), c.Start, c.Size)
+	return New(c.Start+int64(c.Size), c.End+int64(c.Size), c.Size)
 }
 
 func (c Cursor) PageToken() (_ string, err error) {
