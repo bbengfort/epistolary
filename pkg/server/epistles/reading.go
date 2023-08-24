@@ -102,7 +102,7 @@ func List(ctx context.Context, userID int64, prevPage *pagination.Cursor) (r []*
 
 	if prevPage.End != 0 {
 		params = append(params, sql.Named("endIndex", prevPage.End))
-		where = append(where, "r.id < :endIndex")
+		where = append(where, "r.epistle_id < :endIndex")
 	}
 
 	// Add the where clause to the query

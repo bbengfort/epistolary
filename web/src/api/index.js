@@ -40,9 +40,14 @@ export const logout = async () => {
   }
 }
 
-export const listReadings = async () => {
+export const listReadings = async (pageToken) => {
   try {
-    const response = await API.get('reading');
+    let params = {}
+    if (pageToken) {
+      params.page_token = pageToken;
+    }
+
+    const response = await API.get('reading', { params });
     return response.data;
   } catch (error) {
     if (error.response) {
