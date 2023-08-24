@@ -5,6 +5,7 @@ import Form from 'react-bootstrap/Form';
 import InputGroup from 'react-bootstrap/InputGroup';
 import Button from 'react-bootstrap/Button';
 import Toasts from '../components/Toasts';
+import EpistolaryNavbar from '../components/EpistolaryNavbar';
 
 import  { useForm }  from  "react-hook-form";
 import { listReadings, createReading } from '../api';
@@ -63,6 +64,7 @@ function HomePage() {
 
   return (
     <>
+    <EpistolaryNavbar />
     <main className='flex-shrink-0' style={{paddingBottom: "96px"}}>
       <Toasts alerts={alerts} setAlerts={setAlerts} />
       <Container className="mt-4">

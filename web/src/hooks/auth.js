@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import useSessionStorage from "./session";
 
 const AUTH_SESSION_KEY = "epistolaryAuthUser";
-const ANONYMOUS = {username: "anonymous", exp: 0}
+export const ANONYMOUS = {username: "anonymous", exp: 0}
 
 export const isAnonymous = user => {
   if (user) {
