@@ -3,10 +3,12 @@ package epistles
 import (
 	"context"
 	"database/sql"
+	"strings"
 	"time"
 
 	"github.com/bbengfort/epistolary/pkg/server/db"
 	"github.com/bbengfort/epistolary/pkg/server/users"
+	"github.com/bbengfort/epistolary/pkg/utils/pagination"
 )
 
 // Status constants
@@ -69,30 +71,70 @@ func Create(ctx context.Context, userID int64, link string) (r *Reading, err err
 
 const (
 	countReadingSQL = "SELECT count(epistle_id) FROM reading WHERE user_id=$1"
-	listReadingSQL  = "SELECT r.epistle_id, r.status, e.id, e.link, e.title, e.favicon, r.created, r.modified FROM reading r JOIN epistles e ON r.epistle_id=e.id WHERE r.user_id=$1"
+	listReadingSQL  = "SELECT r.epistle_id, r.status, e.id, e.link, e.title, e.favicon, r.created, r.modified FROM reading r JOIN epistles e ON r.epistle_id=e.id"
 )
 
 // List readings for the specified user.
-func List(ctx context.Context, userID int64) (r []*Reading, err error) {
+func List(ctx context.Context, userID int64, prevPage *pagination.Cursor) (r []*Reading, cursor *pagination.Cursor, err error) {
+	if prevPage == nil {
+		prevPage = pagination.New(0, 0, 0)
+	}
+
+	if prevPage.Size <= 0 {
+		return nil, nil, ErrMissingPageSize
+	}
+
 	var tx *sql.Tx
 	if tx, err = db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true}); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	defer tx.Rollback()
 
-	var count int
-	if err = tx.QueryRow(countReadingSQL, userID).Scan(&count); err != nil {
-		return nil, err
+	// Build paramaterized query with WHERE clause
+	var query strings.Builder
+	query.WriteString(listReadingSQL)
+
+	params := make([]any, 0, 3)
+	where := make([]string, 0, 2)
+
+	params = append(params, sql.Named("userID", userID))
+	where = append(where, "r.user_id=:userID")
+
+	if prevPage.End != 0 {
+		params = append(params, sql.Named("endIndex", prevPage.End))
+		where = append(where, "r.id < :endIndex")
 	}
+
+	// Add the where clause to the query
+	query.WriteString(" WHERE ")
+	query.WriteString(strings.Join(where, " AND "))
+
+	// Sort results by descending created timestamp
+	query.WriteString(" ORDER BY created DESC")
+
+	// Add the limit as the page size + 1 to perform a has next page check
+	params = append(params, sql.Named("pageSize", prevPage.Size+1))
+	query.WriteString(" LIMIT :pageSize")
+
+	// Prep the query to convert named arguments into positional arguments
+	qs, args := db.Prep(query.String(), params...)
 
 	var rows *sql.Rows
-	if rows, err = tx.Query(listReadingSQL, userID); err != nil {
-		return nil, err
+	if rows, err = tx.Query(qs, args...); err != nil {
+		return nil, nil, err
 	}
 
-	r = make([]*Reading, 0, count)
+	nRows := uint32(0)
+	r = make([]*Reading, 0, prevPage.Size)
 	defer rows.Close()
 	for rows.Next() {
+		// The query will request one additional message past the page size to check if
+		// there is a next page. No rows should be processed after the page size.
+		nRows++
+		if nRows > prevPage.Size {
+			continue
+		}
+
 		reading := &Reading{
 			UserID: userID,
 		}
@@ -107,7 +149,7 @@ func List(ctx context.Context, userID int64) (r []*Reading, err error) {
 			&epistle.Favicon,
 			&reading.Created,
 			&reading.Modified); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		reading.epistle = epistle
@@ -115,11 +157,15 @@ func List(ctx context.Context, userID int64) (r []*Reading, err error) {
 	}
 
 	if err = rows.Err(); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	tx.Commit()
-	return r, nil
+
+	if len(r) > 0 && nRows > prevPage.Size {
+		cursor = pagination.New(r[0].EpistleID, r[len(r)-1].EpistleID, prevPage.Size)
+	}
+	return r, cursor, nil
 }
 
 const (
