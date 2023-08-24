@@ -41,8 +41,8 @@ type StatusReply struct {
 
 // PageQuery allows the user to request the next or previous page from a given cursor.
 type PageQuery struct {
-	PageSize      uint64 `url:"page_size,omitempty" form:"page_size" json:"page_size,omitempty"`
-	NextPageToken string `url:"next_page_token,omitempty" form:"next_page_token" json:"next_page_token,omitempty"`
+	PageSize  uint64 `url:"page_size,omitempty" form:"page_size" json:"page_size,omitempty"`
+	PageToken string `url:"page_token,omitempty" form:"page_token" json:"page_token,omitempty"`
 }
 
 //===========================================================================

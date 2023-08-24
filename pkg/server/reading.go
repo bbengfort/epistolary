@@ -8,17 +8,19 @@ import (
 
 	"github.com/bbengfort/epistolary/pkg/api/v1"
 	"github.com/bbengfort/epistolary/pkg/server/epistles"
+	"github.com/bbengfort/epistolary/pkg/utils/pagination"
 	"github.com/bbengfort/epistolary/pkg/utils/sentry"
 	"github.com/gin-gonic/gin"
 )
 
 func (s *Server) ListReadings(c *gin.Context) {
 	var (
-		err error
-		out *api.ReadingPage
+		err      error
+		out      *api.ReadingPage
+		curPage  *pagination.Cursor
+		nextPage *pagination.Cursor
 	)
 
-	// TODO: add pagination
 	query := &api.PageQuery{}
 	if err = c.BindQuery(&query); err != nil {
 		c.Error(err)
@@ -33,16 +35,42 @@ func (s *Server) ListReadings(c *gin.Context) {
 		return
 	}
 
+	// Parse the previous page token if one was supplied
+	if query.PageToken != "" {
+		if curPage, err = pagination.Parse(query.PageToken); err != nil {
+			sentry.Warn(c).Err(err).Msg("invalid next page token")
+			c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
+			return
+		}
+	}
+
 	// Fetch the readings for the user
 	var reads []*epistles.Reading
-	if reads, err = epistles.List(c.Request.Context(), userID); err != nil {
-		sentry.Error(c).Err(err).Msg("could not fech readings from database")
+	if reads, nextPage, err = epistles.List(c.Request.Context(), userID, curPage); err != nil {
+		sentry.Error(c).Err(err).Msg("could not fetch readings from database")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not fetch readings"))
 		return
 	}
 
 	out = &api.ReadingPage{
 		Readings: make([]*api.Reading, 0, len(reads)),
+	}
+
+	if nextPage != nil {
+		if out.NextPageToken, err = nextPage.PageToken(); err != nil {
+			sentry.Error(c).Err(err).Msg("could not create next page token")
+			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not fetch readings"))
+			return
+		}
+	}
+
+	if curPage != nil {
+		prevPage := curPage.PrevPage()
+		if out.PrevPageToken, err = prevPage.PageToken(); err != nil {
+			sentry.Error(c).Err(err).Msg("could not create prev page token")
+			c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not fetch readings"))
+			return
+		}
 	}
 
 	for _, r := range reads {
