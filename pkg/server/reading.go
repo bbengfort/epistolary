@@ -127,7 +127,11 @@ func (s *Server) CreateReading(c *gin.Context) {
 	}
 
 	if read, err = epistles.Create(c.Request.Context(), userID, reading.Link); err != nil {
-		// TODO: handle constraint violations better
+		if errors.Is(err, epistles.ErrAlreadyExists) {
+			c.JSON(http.StatusBadRequest, api.ErrorResponse(err))
+			return
+		}
+
 		sentry.Error(c).Err(err).Msg("could not create reading in database")
 		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
 		return

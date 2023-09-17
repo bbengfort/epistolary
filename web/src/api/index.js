@@ -1,5 +1,6 @@
 import axios from 'axios';
 import config from '../config';
+import APIError from './error';
 
 const API =  axios.create({
   baseURL: config.apiBaseURL,
@@ -41,25 +42,22 @@ export const logout = async () => {
 }
 
 export const listReadings = async (pageToken) => {
-  try {
     let params = {}
     if (pageToken) {
       params.page_token = pageToken;
     }
 
-    const response = await API.get('reading', { params });
-    return response.data;
-  } catch (error) {
-    if (error.response) {
-      let data = error.response.data;
-      data.statusCode = error.response.status;
-
-      console.error("received api error", error.response.status, error.response.data);
-      return data;
+    try {
+      const response = await API.get('reading', { params });
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        let data = error.response.data;
+        throw new APIError(data.success, data.error, error.response.status);
+      } else {
+        throw new APIError(false, error.message, null);
+      }
     }
-    console.error("could not connect to list readings endpoint", error.message);
-    return {success: false, error: error.message, statusCode: null};
-  }
 }
 
 export const createReading = async(link) => {

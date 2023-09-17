@@ -13,7 +13,7 @@ const Toasts = ({ alerts, setAlerts }) => {
     <Toast
       autohide
       animation
-      delay={3000}
+      delay={5000}
       bg={alert.bg || 'danger'}
       key={alert.id}
       onClose={() => handleClose(alert.id)}

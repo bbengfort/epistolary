@@ -9,6 +9,7 @@ import (
 	"github.com/bbengfort/epistolary/pkg/server/db"
 	"github.com/bbengfort/epistolary/pkg/server/users"
 	"github.com/bbengfort/epistolary/pkg/utils/pagination"
+	"github.com/lib/pq"
 )
 
 // Status constants
@@ -57,6 +58,10 @@ func Create(ctx context.Context, userID int64, link string) (r *Reading, err err
 
 	// Insert the reading into the database
 	if _, err = tx.Exec(createReadingSQL, r.EpistleID, r.UserID); err != nil {
+		// Handle unique constraint violated error
+		if pgerr, ok := err.(*pq.Error); ok && pgerr.Code == "23505" {
+			return nil, ErrAlreadyExists
+		}
 		return nil, err
 	}
 
