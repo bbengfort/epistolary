@@ -68,14 +68,10 @@ export const createReading = async(link) => {
   } catch (error) {
     if (error.response) {
       let data = error.response.data;
-      data.statusCode = error.response.status;
-
-      console.error("received api error", error.response.status, error.response.data);
-      return data;
+      throw new APIError(data.success, data.error, error.response.status);
+    } else {
+      throw new APIError(false, error.message, null);
     }
-
-    console.error("could not connect to create readings endpoint", error.message);
-    return {success: false, error: error.message, statusCode: null};
   }
 }
 
