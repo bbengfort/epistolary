@@ -170,9 +170,14 @@ func (s *Server) Authenticate(c *gin.Context) {
 	}
 
 	if claims, err = s.tokens.Verify(ats); err != nil {
-		c.Error(err)
-		c.AbortWithStatusJSON(http.StatusUnauthorized, api.ErrorResponse("authentication required"))
-		return
+		// If the access token is no longer valid, attempt to verify with the refresh token
+		var rerr error
+		if claims, rerr = s.Reauthenticate(c); rerr != nil {
+			c.Error(err)
+			c.Error(rerr)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, api.ErrorResponse("authentication required"))
+			return
+		}
 	}
 
 	// Add claims to context for use in downstream processing and continue
@@ -189,6 +194,59 @@ func (s *Server) Authenticate(c *gin.Context) {
 	}
 
 	c.Next()
+}
+
+func (s *Server) Reauthenticate(c *gin.Context) (_ *tokens.Claims, err error) {
+	// Collect and verify the refresh token from the request
+	var refresh string
+	if refresh, err = GetRefreshToken(c); err != nil {
+		return nil, err
+	}
+
+	var refreshClaims *tokens.Claims
+	if refreshClaims, err = s.tokens.Verify(refresh); err != nil {
+		return nil, err
+	}
+
+	// Fetch the user from the subject ID of the refreshClaims
+	var userID int64
+	if userID, err = refreshClaims.SubjectID(); err != nil {
+		sentry.Error(c).Err(err).Msg("could not parse subject id from refresh claims")
+		return nil, err
+	}
+
+	var user *users.User
+	if user, err = users.UserFromID(c.Request.Context(), userID); err != nil {
+		sentry.Error(c).Err(err).Msg("could not retreive user from id on claims")
+		return nil, err
+	}
+
+	claims := &tokens.Claims{
+		Name:     user.FullName.String,
+		Username: user.Username,
+		Email:    user.Email,
+	}
+	claims.SetSubjectID(user.ID)
+
+	// Role and permissions should already be on the user from the earlier request.
+	role, _ := user.Role(c.Request.Context(), false)
+	claims.Role = role.Title
+	claims.Permissions, _ = user.Permissions(c.Request.Context(), false)
+
+	var accessToken, refreshToken string
+	if accessToken, refreshToken, err = s.tokens.CreateTokens(claims); err != nil {
+		sentry.Error(c).Err(err).Msg("could not create access and refresh tokens")
+		return nil, err
+	}
+
+	// Set the access and refresh tokens as cookies for the front-end
+	if err := SetAuthCookies(c, accessToken, refreshToken, s.conf.Token.CookieDomain); err != nil {
+		sentry.Error(c).Err(err).Msg("could not set access and refresh token cookies")
+		return nil, err
+	}
+
+	log.Debug().Int64("userID", userID).Msg("user reauthenticated")
+	return claims, nil
 }
 
 func (s *Server) Authorize(permissions ...string) gin.HandlerFunc {
@@ -237,6 +295,13 @@ func GetAccessToken(c *gin.Context) (tks string, err error) {
 
 	// Could not find the access token in the request
 	return "", errors.New("no access token found in request")
+}
+
+func GetRefreshToken(c *gin.Context) (tks string, err error) {
+	if tks, err = c.Cookie(RefreshTokenCookie); err != nil {
+		return "", errors.New("no refresh token found in request")
+	}
+	return tks, nil
 }
 
 func GetUserClaims(c *gin.Context) (*tokens.Claims, error) {
