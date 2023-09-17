@@ -163,14 +163,15 @@ func (s *Server) Authenticate(c *gin.Context) {
 	)
 
 	// Parse and verify JWT token in authorization header.
-	if ats, err = GetAccessToken(c); err != nil {
-		c.Error(err)
-		c.AbortWithStatusJSON(http.StatusUnauthorized, api.ErrorResponse("authentication required"))
-		return
+	if ats, err = GetAccessToken(c); err == nil {
+		// If there is an access token, verify that it is valid.
+		claims, err = s.tokens.Verify(ats)
 	}
 
-	if claims, err = s.tokens.Verify(ats); err != nil {
-		// If the access token is no longer valid, attempt to verify with the refresh token
+	// If there are no claims, attempt to reauthenticate with the refresh token
+	if claims == nil {
+		// If the access token is no longer valid or not present, attempt to
+		// reauthenticate with the refresh token.
 		var rerr error
 		if claims, rerr = s.Reauthenticate(c); rerr != nil {
 			c.Error(err)
