@@ -11,7 +11,8 @@ import Spinner from 'react-bootstrap/Spinner';
 import EpistolaryNavbar from '../components/EpistolaryNavbar';
 
 import { listReadings } from '../api';
-import readingIcon from '../images/reading.png';
+import ReadingList from '../components/readings/ReadingList';
+import ReadingModal from '../components/readings/ReadingModal';
 import CreateReadingForm from '../components/readings/CreateReadingForm';
 
 
@@ -54,16 +55,13 @@ const HomePage = () => {
     });
   }
 
-  const renderReadings = (data) => {
-    if (data) {
-      return data.map(reading => {
-        return (
-          <li key={reading.id}>
-            <img src={reading.favicon || readingIcon} width="16" height="16" alt="favicon" />{' '}
-            <a className="mx-2" href={reading.link} target="_blank" rel="noreferrer">{reading.title || "unknown title"}</a>
-          </li>
-        );
-      });
+  const [show, setShow] = useState(false);
+  const [readingID, setReadingID] = useState(null);
+
+  const setReadingDetail = id => {
+    if (id) {
+      setReadingID(id);
+      setShow(true);
     }
   }
 
@@ -89,10 +87,9 @@ const HomePage = () => {
           </Alert>
         ) : (
           <>
-          <ul className='list-unstyled'>
-            { renderReadings(data) }
-          </ul>
+          <ReadingList readings={data} setReadingDetail={setReadingDetail} />
           <Pager pagination={pagination} setPage={setPage} isPreviousData={isPreviousData} isFetching={isFetching} />
+          <ReadingModal readingID={readingID} show={show} setShow={setShow} />
           </>
         )}
       </Container>

@@ -74,7 +74,7 @@ type ReadingPage struct {
 
 type Reading struct {
 	ID          int64     `json:"id,omitempty"`
-	Status      string    `json:"staus,omitempty"`
+	Status      string    `json:"status,omitempty"`
 	Link        string    `json:"link"`
 	Title       string    `json:"title,omitempty"`
 	Description string    `json:"description,omitempty"`

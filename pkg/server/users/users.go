@@ -103,7 +103,7 @@ func UserFromID(ctx context.Context, id int64) (user *User, err error) {
 	}
 	defer tx.Rollback()
 
-	if err = tx.QueryRow(getUserIDSQL, id).Scan(user.FullName, user.Email, user.Username, user.RoleID, user.LastSeen, user.PasswordChanged, user.Created, user.Modified); err != nil {
+	if err = tx.QueryRow(getUserIDSQL, id).Scan(&user.FullName, &user.Email, &user.Username, &user.RoleID, &user.LastSeen, &user.PasswordChanged, &user.Created, &user.Modified); err != nil {
 		return nil, err
 	}
 
