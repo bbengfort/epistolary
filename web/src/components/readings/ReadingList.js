@@ -19,21 +19,20 @@ const ReadingList = ({ readings, setReadingDetail }) => {
             <FontAwesomeIcon icon={faCircleCheck} />
           </Button>
         );
-        break;
       case "started":
         return (
           <Button disabled variant="outline-success" size="sm" className='me-2'>
             <FontAwesomeIcon icon={faBookOpenReader} />
           </Button>
         );
-        break;
       case "queued":
         return (
           <Button disabled variant="outline-light" size="sm" className='me-2'>
             <FontAwesomeIcon icon={faHourglassStart} />
           </Button>
         );
-        break;
+      default:
+        return null;
     }
   }
 

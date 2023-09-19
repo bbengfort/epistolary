@@ -4,11 +4,11 @@ import "fmt"
 
 // Version component constants for the current build.
 const (
-	VersionMajor         = 0
-	VersionMinor         = 4
+	VersionMajor         = 1
+	VersionMinor         = 0
 	VersionPatch         = 0
 	VersionReleaseLevel  = ""
-	VersionReleaseNumber = 4
+	VersionReleaseNumber = 5
 )
 
 // Set the GitVersion via -ldflags="-X 'github.com/bbengfort/epistolary/pkg.GitVersion=$(git rev-parse --short HEAD)'"
