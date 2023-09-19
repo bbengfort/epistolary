@@ -11,10 +11,9 @@ import { fetchReading } from '../../api';
 
 import readingIcon from '../../images/reading.png';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faTrashCan, faSave } from '@fortawesome/free-solid-svg-icons'
+import { faSave } from '@fortawesome/free-solid-svg-icons'
 
-
-const ReadingModal = ({ readingID, show, setShow }) => {
+const ReadingModal = ({ readingID, show, setShow, addAlert }) => {
 
   const fetchReadingDetail = async() => {
       if (readingID) {
@@ -83,17 +82,13 @@ const ReadingModal = ({ readingID, show, setShow }) => {
             Could not fetch reading detail: { error.message }
           </Alert>
         ) : data && (
-          <ReadingForm reading={data} />
+          <ReadingForm reading={data} addAlert={addAlert} />
         )}
       </Modal.Body>
       <Modal.Footer>
         {(!isLoading && !isFetching && !isError) &&
           <>
-          <Button variant="danger" disabled>
-            <FontAwesomeIcon icon={faTrashCan} />{' '}
-            Delete
-          </Button>
-          <Button variant="primary" disabled>
+          <Button variant="primary" form="formReading" type="submit">
             <FontAwesomeIcon icon={faSave} />{' '}
             Save
           </Button>

@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"database/sql"
 	"time"
 )
 
@@ -120,4 +121,19 @@ func (t Timestamp) MarshalJSON() ([]byte, error) {
 		return []byte("null"), nil
 	}
 	return t.Time.MarshalJSON()
+}
+
+func (t *Timestamp) UnmarshalJSON(data []byte) error {
+	if string(data) == "" || string(data) == "null" {
+		t.Time = time.Time{}
+		return nil
+	}
+	return t.Time.UnmarshalJSON(data)
+}
+
+func (t Timestamp) ToSQL() sql.NullTime {
+	return sql.NullTime{
+		Time:  t.Time,
+		Valid: !t.Time.IsZero(),
+	}
 }
