@@ -5,6 +5,7 @@ import Alert from 'react-bootstrap/Alert';
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
 import Spinner from 'react-bootstrap/Spinner';
+import ReadingForm from './ReadingForm';
 
 import { fetchReading } from '../../api';
 
@@ -37,18 +38,22 @@ const ReadingModal = ({ readingID, show, setShow }) => {
 
   const modalTitle = () => {
     if (isLoading || isFetching) {
-      return "Loading ..."
+      return "Loading ...";
     }
 
     if (isError) {
-      return "Something went wrong"
+      return "Something went wrong";
+    }
+
+    if (!data) {
+      return <></>;
     }
 
     return (
-      <>
-      <img src={data.favicon || readingIcon} width="24" height="24" alt="favicon" className='my-0 py-0' />{' '}
-      Reading Detail ({data.id})
-      </>
+      <h5 className='mt-2'>
+        <img src={data.favicon || readingIcon} width="20" height="20" alt="favicon" style={{marginTop: "-4px"}} />{' '}
+        Reading Detail <span className="text-muted">({data.id})</span>
+      </h5>
     )
   }
 
@@ -62,7 +67,7 @@ const ReadingModal = ({ readingID, show, setShow }) => {
       centered
     >
       <Modal.Header closeButton>
-        <Modal.Title id="reading-detail-modal-title">
+        <Modal.Title as="div" id="reading-detail-modal-title">
           {modalTitle()}
         </Modal.Title>
       </Modal.Header>
@@ -77,14 +82,8 @@ const ReadingModal = ({ readingID, show, setShow }) => {
           <Alert variant='danger'>
             Could not fetch reading detail: { error.message }
           </Alert>
-        ) : (
-          <>
-          <h6>{data.title}</h6>
-          <p>{data.description}</p>
-          <p>Status: {data.status}</p>
-          <p>Started: {data.started} Finished: {data.finished}</p>
-          <a href={data.link} target="_blank" rel="noreferrer">link</a>
-          </>
+        ) : data && (
+          <ReadingForm reading={data} />
         )}
       </Modal.Body>
       <Modal.Footer>

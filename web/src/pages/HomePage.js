@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom'
 
 import Alert from 'react-bootstrap/Alert';
 import Container from 'react-bootstrap/Container';
@@ -11,12 +12,15 @@ import Spinner from 'react-bootstrap/Spinner';
 import EpistolaryNavbar from '../components/EpistolaryNavbar';
 
 import { listReadings } from '../api';
+import APIError from '../api/error';
+
 import ReadingList from '../components/readings/ReadingList';
 import ReadingModal from '../components/readings/ReadingModal';
 import CreateReadingForm from '../components/readings/CreateReadingForm';
 
 
 const HomePage = () => {
+  const navigate = useNavigate();
   const [ page, setPage ] = useState("");
   const [ pagination, setPagination ] = useState({prevPageToken: "", nextPageToken: ""});
   const [ alerts, setAlerts ] = useState([]);
@@ -30,6 +34,12 @@ const HomePage = () => {
       });
       return data.readings;
     } catch (err) {
+      if (err instanceof APIError) {
+        if (err.statusCode === 401) {
+          navigate('/login');
+        }
+      }
+
       addAlert(err.message);
       throw err;
     }
