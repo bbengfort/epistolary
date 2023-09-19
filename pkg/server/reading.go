@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/bbengfort/epistolary/pkg/api/v1"
 	"github.com/bbengfort/epistolary/pkg/server/epistles"
@@ -109,6 +110,7 @@ func (s *Server) CreateReading(c *gin.Context) {
 		return
 	}
 
+	reading.Link = strings.TrimSpace(reading.Link)
 	if reading.Link == "" {
 		c.JSON(http.StatusBadRequest, api.ErrorResponse("link required to create reading"))
 		return
@@ -202,6 +204,89 @@ func (s *Server) FetchReading(c *gin.Context) {
 	c.JSON(http.StatusOK, reading)
 }
 
-func (s *Server) UpdateReading(c *gin.Context) {}
+func (s *Server) UpdateReading(c *gin.Context) {
+	var (
+		err       error
+		reading   *api.Reading
+		readingID int64
+		userID    int64
+	)
 
-func (s *Server) DeleteReading(c *gin.Context) {}
+	// Get the userID from the claims in the request
+	if userID, err = GetUserID(c); err != nil {
+		sentry.Error(c).Err(err).Msg("could not parse user id")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse("could not process request"))
+	}
+
+	// Parse the reading update input from the request
+	reading = &api.Reading{}
+	if err = c.BindJSON(reading); err != nil {
+		c.Error(err)
+		c.JSON(http.StatusBadRequest, api.ErrorResponse("could not parse reading input"))
+		return
+	}
+
+	if readingID, err = strconv.ParseInt(c.Param("readingID"), 10, 64); err != nil {
+		c.Error(err)
+		c.JSON(http.StatusNotFound, api.ErrorResponse("reading not found"))
+		return
+	}
+
+	// Populate the reading ID from the endpoint if it was not submitted
+	if reading.ID == 0 {
+		reading.ID = readingID
+	}
+
+	// Ensure the endpoint matches the ID specified by the reading
+	if reading.ID != readingID {
+		c.JSON(http.StatusBadRequest, api.ErrorResponse("id must match endpoint"))
+		return
+	}
+
+	reading.Title = strings.TrimSpace(reading.Title)
+	reading.Description = strings.TrimSpace(reading.Description)
+
+	// The title is required on PUT requests (otherwise will be unclickable)
+	if reading.Title == "" {
+		c.JSON(http.StatusBadRequest, api.ErrorResponse("title is required on update"))
+		return
+	}
+
+	// Convert the reading to the model with the fields that are updateable.
+	model := &epistles.Reading{
+		EpistleID: reading.ID,
+		UserID:    userID,
+		Started:   reading.Started.ToSQL(),
+		Finished:  reading.Finished.ToSQL(),
+		Archived:  reading.Archived.ToSQL(),
+	}
+
+	// Convert the reading to the epistle with the fields that are updateable.
+	// NOTE: the link of the epistle cannot be updated through this RPC.
+	epistle := &epistles.Epistle{
+		ID:          reading.ID,
+		Title:       sql.NullString{String: reading.Title, Valid: reading.Title != ""},
+		Description: sql.NullString{String: reading.Description, Valid: reading.Description != ""},
+	}
+
+	if err = epistles.Update(c.Request.Context(), model, epistle); err != nil {
+		sentry.Error(c).Err(err).Msg("could not update reading in database")
+		c.JSON(http.StatusInternalServerError, api.ErrorResponse(err))
+		return
+	}
+
+	// Convert the model back to the API for the response
+	reading.Status = string(model.Status)
+	reading.Started = api.Timestamp{Time: model.Started.Time}
+	reading.Finished = api.Timestamp{Time: model.Finished.Time}
+	reading.Archived = api.Timestamp{Time: model.Archived.Time}
+	reading.Created = api.Timestamp{Time: model.Created}
+	reading.Modified = api.Timestamp{Time: model.Modified}
+
+	// Return the reading object back to the user
+	c.JSON(http.StatusOK, reading)
+}
+
+func (s *Server) DeleteReading(c *gin.Context) {
+	c.Status(http.StatusNotImplemented)
+}

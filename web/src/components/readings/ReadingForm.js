@@ -1,32 +1,69 @@
 import React from 'react';
 import { useForm }  from  "react-hook-form";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+
 import dayjs  from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import timezone from 'dayjs/plugin/timezone';
 
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import Form from 'react-bootstrap/Form';
 
+import { updateReading } from '../../api';
+
+
 // Extend dayjs with relative time.
 dayjs.extend(relativeTime);
+dayjs.extend(timezone);
+dayjs.tz.setDefault(dayjs.tz.guess());
 
 
-const ReadingForm = ({ reading }) => {
+const formatReading = reading => {
+  if (reading.started) {
+    reading.started = dayjs(reading.started).format("YYYY-MM-DDTHH:mm");
+  }
+
+  if (reading.finished) {
+    reading.finished = dayjs(reading.finished).format("YYYY-MM-DDTHH:mm");
+  }
+
+  return reading;
+}
+
+
+const ReadingForm = ({ reading, addAlert }) => {
   // Form State
-  const { register, handleSubmit, formState:{errors} } = useForm({
-    defaultValues: reading,
+  const { register, handleSubmit } = useForm({
+    defaultValues: formatReading(reading),
   });
 
-  const onSubmit = async (data) => {
-    if (errors) {
-      console.error(errors);
-      return
+  // Query mutation
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: updateReading,
+    onError: error => addAlert("Could not update reading: " + error.message),
+    onSuccess: updated => {
+      queryClient.setQueryData(['reading', updated.id], updated);
+      addAlert(updated.title + " was successfully updated", "success", "Reading Updated");
     }
-    console.info(data);
+  })
+
+
+  const onSubmit = async (data) => {
+    if (data.started) {
+      data.started = dayjs(data.started).format();
+    }
+
+    if (data.finished) {
+      data.finished = dayjs(data.finished).format();
+    }
+
+    mutation.mutate(data);
   }
 
   return (
-    <Form onSubmit={handleSubmit(onSubmit)}>
+    <Form id="formReading" onSubmit={handleSubmit(onSubmit)}>
       <Form.Group className="mb-3" controlId='formReadingTitle'>
         <Form.Label>Title</Form.Label>
         <Form.Control
@@ -35,7 +72,7 @@ const ReadingForm = ({ reading }) => {
           {...register("title", { required: true })}
         />
         <Form.Text>
-          Status: {reading.status}.
+          Status: {reading.status}
         </Form.Text>
       </Form.Group>
 

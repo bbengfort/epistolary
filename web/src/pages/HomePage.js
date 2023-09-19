@@ -99,7 +99,7 @@ const HomePage = () => {
           <>
           <ReadingList readings={data} setReadingDetail={setReadingDetail} />
           <Pager pagination={pagination} setPage={setPage} isPreviousData={isPreviousData} isFetching={isFetching} />
-          <ReadingModal readingID={readingID} show={show} setShow={setShow} />
+          <ReadingModal readingID={readingID} show={show} setShow={setShow} addAlert={addAlert} />
           </>
         )}
       </Container>

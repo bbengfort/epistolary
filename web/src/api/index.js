@@ -89,6 +89,20 @@ export const fetchReading = async (readingID) => {
   }
 }
 
+export const updateReading = async (reading) => {
+  try {
+    const response = await API.put('reading/' + reading.id, reading);
+    return response.data;
+  } catch(error) {
+    if (error.response) {
+      let data = error.response.data;
+      throw new APIError(data.success, data.error, error.response.status);
+    } else {
+      throw new APIError(false, error.message, null);
+    }
+  }
+}
+
 export const status = async () => {
   try {
     const response = await API.get('status');

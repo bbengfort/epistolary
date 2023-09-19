@@ -36,6 +36,19 @@ type Reading struct {
 	user      *users.User
 }
 
+func (r Reading) status() Status {
+	switch {
+	case r.Archived.Valid && !r.Archived.Time.IsZero():
+		return StatusArchived
+	case r.Finished.Valid && !r.Finished.Time.IsZero():
+		return StatusFinished
+	case r.Started.Valid && !r.Started.Time.IsZero():
+		return StatusStarted
+	default:
+		return StatusQueued
+	}
+}
+
 const (
 	createReadingSQL = "INSERT INTO reading (epistle_id, user_id) VALUES ($1, $2)"
 	readingTSSQL     = "SELECT created, modified FROM reading WHERE epistle_id=$1 AND user_id=$2"
@@ -209,6 +222,49 @@ func Fetch(ctx context.Context, epistleID, userID int64) (reading *Reading, err 
 
 	reading.epistle = epistle
 	return reading, nil
+}
+
+const (
+	updateEpistleSQL = "UPDATE epistles SET title=$2, description=$3 WHERE id=$1"
+	updateReadingSQL = "UPDATE reading SET status=$3, started=$4, finished=$5, archived=$6 WHERE epistle_id=$1 AND user_id=$2"
+)
+
+func Update(ctx context.Context, r *Reading, e *Epistle) (err error) {
+	if r.EpistleID == 0 || r.UserID == 0 || e.ID == 0 {
+		return ErrIDRequired
+	}
+
+	if r.EpistleID != e.ID {
+		return ErrEpistleIDMismatch
+	}
+
+	r.Status = r.status()
+
+	var tx *sql.Tx
+	if tx, err = db.BeginTx(ctx, &sql.TxOptions{ReadOnly: false}); err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	// Update the epistle first
+	if _, err = tx.Exec(updateEpistleSQL, e.ID, e.Title, e.Description); err != nil {
+		return err
+	}
+
+	// Update the reading second
+	if _, err = tx.Exec(updateReadingSQL, r.EpistleID, r.UserID, r.Status, r.Started, r.Finished, r.Archived); err != nil {
+		return err
+	}
+
+	// Get the timestamps from the database
+	if err = tx.QueryRow(readingTSSQL, r.EpistleID, r.UserID).Scan(&r.Created, &r.Modified); err != nil {
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		return err
+	}
+	return nil
 }
 
 const (
