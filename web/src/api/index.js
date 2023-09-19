@@ -60,12 +60,26 @@ export const listReadings = async (pageToken) => {
     }
 }
 
-export const createReading = async(link) => {
+export const createReading = async (link) => {
   try {
     const req = {link};
     const response = await API.post('reading', req);
     return response.data;
   } catch (error) {
+    if (error.response) {
+      let data = error.response.data;
+      throw new APIError(data.success, data.error, error.response.status);
+    } else {
+      throw new APIError(false, error.message, null);
+    }
+  }
+}
+
+export const fetchReading = async (readingID) => {
+  try {
+    const response = await API.get('reading/' + readingID);
+    return response.data;
+  } catch(error) {
     if (error.response) {
       let data = error.response.data;
       throw new APIError(data.success, data.error, error.response.status);
