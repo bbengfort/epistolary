@@ -6,10 +6,36 @@ import Button from 'react-bootstrap/Button';
 
 import readingIcon from '../../images/reading.png';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPenToSquare } from '@fortawesome/free-solid-svg-icons'
+import { faPenToSquare, faCircleCheck, faBookOpenReader, faHourglassStart } from '@fortawesome/free-solid-svg-icons'
 
 
 const ReadingList = ({ readings, setReadingDetail }) => {
+
+  const statusButton = status => {
+    switch (status) {
+      case "finished":
+        return (
+          <Button disabled variant="outline-danger" size="sm" className='me-2'>
+            <FontAwesomeIcon icon={faCircleCheck} />
+          </Button>
+        );
+        break;
+      case "started":
+        return (
+          <Button disabled variant="outline-success" size="sm" className='me-2'>
+            <FontAwesomeIcon icon={faBookOpenReader} />
+          </Button>
+        );
+        break;
+      case "queued":
+        return (
+          <Button disabled variant="outline-light" size="sm" className='me-2'>
+            <FontAwesomeIcon icon={faHourglassStart} />
+          </Button>
+        );
+        break;
+    }
+  }
 
   const renderReadings = () => {
     if (readings) {
@@ -23,6 +49,7 @@ const ReadingList = ({ readings, setReadingDetail }) => {
               <a className='text-decoration-none' href={reading.link} target="_blank" rel="noreferrer">{reading.title || "unknown title"}</a>
             </td>
             <td>
+              {statusButton(reading.status)}
               <Button variant="outline-primary" size="sm" onClick={() => setReadingDetail(reading.id)}>
                 <FontAwesomeIcon icon={faPenToSquare} />
               </Button>
